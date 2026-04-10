@@ -1,0 +1,21 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+
+brew bundle --file=/dev/stdin <<EOF
+brew "bat"
+brew "dust"
+brew "git"
+brew "git-delta"
+brew "gnu-sed"
+brew "gnu-tar"
+brew "python"
+brew "tmux"
+brew "uv"
+brew "wget"
+brew "xz"
+brew "zsh"
+brew "zsh-completions"
+brew "zsh-syntax-highlighting"
+brew "zstd"
+EOF
+{{ end -}}
