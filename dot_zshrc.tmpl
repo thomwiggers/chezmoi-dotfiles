@@ -41,11 +41,14 @@ alias la='ls -a'
 alias l='ls'
 alias sl='ls'
 
-alias gdb='gdb -q'
-alias gp='gp -q'
+alias gdb='gdb -q'  # don't show version information
+alias gp='gp -q'    # quiet on startup
 alias grep='grep --color=auto'
 alias diff='diff --color=auto'
+
+# Remapped tools
 alias cat=bat
+alias vim=nvim
 
 source ~/.zsh/key-bindings.zsh
 
