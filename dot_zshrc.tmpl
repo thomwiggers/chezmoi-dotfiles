@@ -30,5 +30,7 @@ setopt appendhistory    # append to the history {{ .chezmoi.config.mode }} inste
 autoload -Uz compinit
 zstyle '{{ .chezmoi.pathListSeparator }}completion{{ .chezmoi.pathListSeparator }}*' menu select
 
+
+
 eval "$(starship init zsh)"
 compinit
