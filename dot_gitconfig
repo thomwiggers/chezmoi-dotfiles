@@ -1,0 +1,101 @@
+#  vim: set ts=4 sw=4 tw=0 ft=gitconfig noet :
+
+[user]
+	name = Thom Wiggers
+	email = thom@thomwiggers.nl
+	signingkey = 4871E82F
+[alias]
+	br = branch
+	ci = commit
+	co = checkout
+	df = diff
+	g = grep -I
+	smp = submodule -q foreach git pull -q origin master
+	st = status
+	count = !git shortlog -sn
+	tree = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+	branch-name = "!git rev-parse --abbrev-ref HEAD"
+	publish = "!git push -u origin $(git branch-name)"
+[color]
+	diff = auto
+	status = auto
+	branch = auto
+	ui = auto
+[color "branch"]
+	current = yellow reverse
+	local = yellow
+	remote = green
+[color "diff"]
+	meta = yellow bold
+	frag = magenta bold
+	old = red bold
+	new = green bold
+[color "status"]
+	added = yellow
+	changed = green
+	untracked = cyan
+[core]
+	excludesfile = ~/.gitignore
+	attributesfile = ~/.gitattributes
+	editor = vim
+	eol = lf
+	autocrlf = false
+	whitespace = trailing-space
+    pager = delta
+[apply]
+	whitespace = fix
+[mergetool]
+	keepBackup = false
+[rerere]
+	# log fixed conflicts
+	enabled = true
+[help]
+	autocorrect = 1
+[diff]
+	colorMoved = default
+[diff "exif"]
+	textconv = exiftool
+[github]
+	user = thomwiggers
+[push]
+	default = simple
+	autoSetupRemote = true
+[url "git@github.com:"]
+	pushInsteadOf = git://github.com/
+[url "git@bitbucket.org:"]
+	pushInsteadOf = https://bitbucket.org/
+[url "git@github.com:thomwiggers"]
+	pushInsteadOf = "https://github.com/thomwiggers"
+[url "git@github.com:thomwiggers/"]
+	pushInsteadOf = "git://github.com/thomwiggers/"
+[merge]
+	tool = vimdiff
+	conflictstyle = diff3
+[commit]
+	gpgsign = on
+[transfer]
+	fsckobjects = true
+[fetch]
+	fsckobjects = true
+[receive]
+	fsckobjects = true
+[branch]
+	autoSetupRebase = local
+[pull]
+	ff = only
+	rebase = true
+[rebase]
+	missingCommitsCheck = error
+	autoStash = true
+[submodule]
+	fetchJobs = 0
+	recurse = true
+[interactive]
+    diffFilter = delta --color-only
+[delta]
+    syntax-theme = Visual Studio Dark+
+	navigate = true
+	features = line-numbers
+	hyperlinks = true
+[init]
+	defaultBranch = main

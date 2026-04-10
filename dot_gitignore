@@ -1,0 +1,4 @@
+.ropeproject/
+*.bak
+.DS_Store
+.gdb_history
