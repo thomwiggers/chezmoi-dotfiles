@@ -11,6 +11,7 @@ fi
 path=(
     "/opt/homebrew/opt/gnu-tar/libexec/bin"
     "/opt/homebrew/opt/python/libexec/bin"
+    "/Applications/Docker.app/Contents/Resources/bin"
     $path
 )
 
@@ -27,6 +28,11 @@ export HOMEBREW_BAT=true
 export RIP_GRAVEYARD="$HOME/.Trash"
 {{ end }}
 
+# For Docker
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+
+# Python
 if $(type python3 > /dev/null); then
     path=(
         "$(python3 -m site --user-base)/bin"
