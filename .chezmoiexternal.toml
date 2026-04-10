@@ -1,0 +1,5 @@
+#[".tmux/plugins/tpm"]
+#    type = "archive"
+#    url = "https://github.com/tmux-plugins/tpm/archive/refs/heads/master.zip"
+#    exact = True
+#    refreshPeriod = "500h"
