@@ -52,7 +52,12 @@ source ~/.zsh/key-bindings.zsh
 eval "$(starship init zsh)"
 
 # Initialize completion
-compinit
+# only load fresh once a day
+if [ "$(date +'%j')" != "$(stat -f '%Sm' -t '%j' ~/.zcompdump 2>/dev/null)" ]; then
+    compinit
+else
+    compinit -C
+fi
 
 export LS_COLORS="$(vivid generate molokai)"
 
