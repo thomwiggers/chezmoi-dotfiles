@@ -1,3 +1,18 @@
+{{- $cpuCores := 1 }}
+{{- $cpuThreads := 1 }}
+{{- $computerName := .chezmoi.hostname }}
+{{- if eq .chezmoi.os "darwin" }}
+{{-   $cpuCores = (output "sysctl" "-n" "hw.physicalcpu_max") | trim | atoi }}
+{{-   $cpuThreads = (output "sysctl" "-n" "hw.logicalcpu_max") | trim | atoi }}
+{{-   $computerName = (output "scutil" "--get" "ComputerName") | trim }}
+{{- else if eq .chezmoi.os "linux" }}
+{{-   $cpuCores = (output "sh" "-c" "lscpu --online --parse | grep --invert-match '^#' | sort --field-separator=',' --key='2,4' --unique | wc --lines") | trim | atoi }}
+{{-   $cpuThreads = (output "sh" "-c" "lscpu --online --parse | grep --invert-match '^#' | wc --lines") | trim | atoi }}
+{{- else if eq .chezmoi.os "windows" }}
+{{-   $cpuCores = (output "pwsh.exe" "-NoProfile" "-NonInteractive" "-Command" "(Get-CimInstance -ClassName 'Win32_Processor').NumberOfCores") | trim | atoi }}
+{{-   $cpuThreads = (output "pwsh.exe" "-NoProfile" "-NonInteractive" "-Command" "(Get-CimInstance -ClassName 'Win32_Processor').NumberOfLogicalProcessors") | trim | atoi }}
+{{- end }}
+
 encryption = "age"
 [age]
     identity = "~/.config/chezmoi/key.txt"
@@ -5,3 +20,7 @@ encryption = "age"
 
 [git]
     autoCommit = true
+
+[data.cpu]
+    cores = {{ $cpuCores }}
+    threads = {{ $cpuThreads }}

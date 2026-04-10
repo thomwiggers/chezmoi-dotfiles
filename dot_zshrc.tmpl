@@ -30,7 +30,12 @@ setopt appendhistory    # append to the history file instead of overwriting it o
 autoload -Uz compinit
 zstyle ':completion:*' menu select
 
-alias ls='ls -h --color=auto'
+{{ $ls := "ls" }}
+{{- if eq .chezmoi.os "darwin" -}}
+{{ $ls = "gls" }}
+{{- end -}}
+
+alias ls='{{ $ls }} -h --color=auto'
 alias ll='ls -l'
 alias la='ls -a'
 alias l='ls'
