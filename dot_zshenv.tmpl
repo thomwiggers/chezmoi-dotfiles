@@ -1,57 +1,56 @@
-#!{{ .chezmoi.pathSeparator }}bin{{ .chezmoi.pathSeparator }}zsh
-
 export EDITOR=nvim
 
 typeset -U PATH path
 
-if [ -f {{ .chezmoi.pathSeparator }}opt{{ .chezmoi.pathSeparator }}homebrew{{ .chezmoi.pathSeparator }}bin{{ .chezmoi.pathSeparator }}brew ]; then
-    eval $({{ .chezmoi.pathSeparator }}opt{{ .chezmoi.pathSeparator }}homebrew{{ .chezmoi.pathSeparator }}bin{{ .chezmoi.pathSeparator }}brew shellenv zsh)
+{{ if eq .chezmoi.os "darwin" }}
+
+if [ -f /opt/homebrew/bin/brew ]; then
+    eval $(/opt/homebrew/bin/brew shellenv zsh)
 fi
 
 path=(
-    "{{ .chezmoi.pathSeparator }}opt{{ .chezmoi.pathSeparator }}homebrew{{ .chezmoi.pathSeparator }}opt{{ .chezmoi.pathSeparator }}gnu-tar{{ .chezmoi.pathSeparator }}libexec{{ .chezmoi.pathSeparator }}bin"
-    "{{ .chezmoi.pathSeparator }}opt{{ .chezmoi.pathSeparator }}homebrew{{ .chezmoi.pathSeparator }}opt{{ .chezmoi.pathSeparator }}python{{ .chezmoi.pathSeparator }}libexec{{ .chezmoi.pathSeparator }}bin"
+    "/opt/homebrew/opt/gnu-tar/libexec/bin"
+    "/opt/homebrew/opt/python/libexec/bin"
     $path
 )
 
 fpath=(
-    "{{ .chezmoi.pathSeparator }}opt{{ .chezmoi.pathSeparator }}homebrew{{ .chezmoi.pathSeparator }}share{{ .chezmoi.pathSeparator }}zsh{{ .chezmoi.pathSeparator }}site-functions"
+    "/opt/homebrew/share/zsh/site-functions"
     $fpath
 )
 
-# {{ .chezmoi.version.builtBy }} options
+# Homebrew options
 export HOMEBREW_NO_ENV_HINTS=true
 export HOMEBREW_BAT=true
 
 # for rip
-export RIP_GRAVEYARD="$HOME{{ .chezmoi.pathSeparator }}.Trash"
+export RIP_GRAVEYARD="$HOME/.Trash"
+{{ end }}
 
-
-if $(type {{ .chezmoi.config.interpreters.py.command }} > {{ .chezmoi.pathSeparator }}dev{{ .chezmoi.pathSeparator }}null); then
+if $(type python3 > /dev/null); then
     path=(
-        "$({{ .chezmoi.config.interpreters.py.command }} -m site --user-base){{ .chezmoi.pathSeparator }}bin"
+        "$(python3 -m site --user-base)/bin"
         $path
     )
-elif $(type python > {{ .chezmoi.pathSeparator }}dev{{ .chezmoi.pathSeparator }}null); then
+elif $(type python > /dev/null); then
     path=(
-        "$(python -m site --user-base){{ .chezmoi.pathSeparator }}bin"
+        "$(python -m site --user-base)/bin"
         $path
     )
 fi
 
-if [ -e "$HOME{{ .chezmoi.pathSeparator }}.cargo{{ .chezmoi.pathSeparator }}env" ]; then
-    source "$HOME{{ .chezmoi.pathSeparator }}.cargo{{ .chezmoi.pathSeparator }}env"
+if [ -e "$HOME/.cargo/env" ]; then
+    source "$HOME/.cargo/env"
 fi
 
 path=(
-    "$HOME{{ .chezmoi.pathSeparator }}.local{{ .chezmoi.pathSeparator }}bin"
+    "$HOME/.local/bin"
     $path
 )
-
 export path
 
 export XZ_DEFAULTS="-T0"
 export ZSTD_CLEVEL="6"
 export ZSTD_NBTHREADS="0"
 
-# vim{{ .chezmoi.pathListSeparator }} set ft=zsh et {{ .chezmoi.pathListSeparator }}
+# vim: set ft=zsh ts=4 sw=4 et :
