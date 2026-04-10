@@ -28,9 +28,19 @@ setopt appendhistory    # append to the history {{ .chezmoi.config.mode }} inste
 
 
 autoload -Uz compinit
-zstyle '{{ .chezmoi.pathListSeparator }}completion{{ .chezmoi.pathListSeparator }}*' menu select
+zstyle ':completion:*' menu select
 
+alias ls='ls -h --color=auto'
+alias ll=ls -l'
+alias la='ls -a'
+alias l='ls'
+alias sl='ls'
 
+alias gdb='gdb -q'
+alias gp='gp -q'
+alias grep='grep --color=auto'
+alias diff='diff --color=auto'
 
 eval "$(starship init zsh)"
+
 compinit
