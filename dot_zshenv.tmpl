@@ -1,0 +1,57 @@
+#!{{ .chezmoi.pathSeparator }}bin{{ .chezmoi.pathSeparator }}zsh
+
+export EDITOR=nvim
+
+typeset -U PATH path
+
+if [ -f {{ .chezmoi.pathSeparator }}opt{{ .chezmoi.pathSeparator }}homebrew{{ .chezmoi.pathSeparator }}bin{{ .chezmoi.pathSeparator }}brew ]; then
+    eval $({{ .chezmoi.pathSeparator }}opt{{ .chezmoi.pathSeparator }}homebrew{{ .chezmoi.pathSeparator }}bin{{ .chezmoi.pathSeparator }}brew shellenv zsh)
+fi
+
+path=(
+    "{{ .chezmoi.pathSeparator }}opt{{ .chezmoi.pathSeparator }}homebrew{{ .chezmoi.pathSeparator }}opt{{ .chezmoi.pathSeparator }}gnu-tar{{ .chezmoi.pathSeparator }}libexec{{ .chezmoi.pathSeparator }}bin"
+    "{{ .chezmoi.pathSeparator }}opt{{ .chezmoi.pathSeparator }}homebrew{{ .chezmoi.pathSeparator }}opt{{ .chezmoi.pathSeparator }}python{{ .chezmoi.pathSeparator }}libexec{{ .chezmoi.pathSeparator }}bin"
+    $path
+)
+
+fpath=(
+    "{{ .chezmoi.pathSeparator }}opt{{ .chezmoi.pathSeparator }}homebrew{{ .chezmoi.pathSeparator }}share{{ .chezmoi.pathSeparator }}zsh{{ .chezmoi.pathSeparator }}site-functions"
+    $fpath
+)
+
+# {{ .chezmoi.version.builtBy }} options
+export HOMEBREW_NO_ENV_HINTS=true
+export HOMEBREW_BAT=true
+
+# for rip
+export RIP_GRAVEYARD="$HOME{{ .chezmoi.pathSeparator }}.Trash"
+
+
+if $(type {{ .chezmoi.config.interpreters.py.command }} > {{ .chezmoi.pathSeparator }}dev{{ .chezmoi.pathSeparator }}null); then
+    path=(
+        "$({{ .chezmoi.config.interpreters.py.command }} -m site --user-base){{ .chezmoi.pathSeparator }}bin"
+        $path
+    )
+elif $(type python > {{ .chezmoi.pathSeparator }}dev{{ .chezmoi.pathSeparator }}null); then
+    path=(
+        "$(python -m site --user-base){{ .chezmoi.pathSeparator }}bin"
+        $path
+    )
+fi
+
+if [ -e "$HOME{{ .chezmoi.pathSeparator }}.cargo{{ .chezmoi.pathSeparator }}env" ]; then
+    source "$HOME{{ .chezmoi.pathSeparator }}.cargo{{ .chezmoi.pathSeparator }}env"
+fi
+
+path=(
+    "$HOME{{ .chezmoi.pathSeparator }}.local{{ .chezmoi.pathSeparator }}bin"
+    $path
+)
+
+export path
+
+export XZ_DEFAULTS="-T0"
+export ZSTD_CLEVEL="6"
+export ZSTD_NBTHREADS="0"
+
+# vim{{ .chezmoi.pathListSeparator }} set ft=zsh et {{ .chezmoi.pathListSeparator }}
