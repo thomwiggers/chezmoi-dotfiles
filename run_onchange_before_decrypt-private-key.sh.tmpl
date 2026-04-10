@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# key.txt.age hash: {{ include "key.txt.age" | sha256sum }}
+if [ ! -f "/Users/thom/.config/chezmoi/key.txt" ]; then
+    mkdir -p "/Users/thom/.config/chezmoi"
+    chezmoi age decrypt --output "/Users/thom/.config/chezmoi/key.txt" --passphrase "{{ .chezmoi.sourceDir }}/key.txt.age"
+    chmod 600 "/Users/thom/.config/chezmoi/key.txt"
+fi
