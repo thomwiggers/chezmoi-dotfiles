@@ -52,11 +52,11 @@ alias vim=nvim
 
 source ~/.zsh/key-bindings.zsh
 
-{{- if eq .chezmoi.os "darwin" }}
+{{ if eq .chezmoi.os "darwin" }}
 if [ -e /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
     source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
-{{- end -}}
+{{- end }}
 
 eval "$(starship init zsh)"
 
