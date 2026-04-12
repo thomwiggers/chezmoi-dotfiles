@@ -1,2 +1,5 @@
-eval "$(PATH="" {{ .chezmoi.pathSeparator }}usr{{ .chezmoi.pathSeparator }}libexec{{ .chezmoi.pathSeparator }}path_helper)"
-source "$HOME{{ .chezmoi.pathSeparator }}.zshenv"
+{{ if eq .chezmoi.os "darwin" }}
+eval "$(PATH="" /usr/libexec/path_helper)"
+source "$HOME/.zshenv"
+export SSH_SK_PROVIDER=/usr/lib/ssh-keychain.dylib
+{{ end -}}
