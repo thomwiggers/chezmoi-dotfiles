@@ -58,15 +58,10 @@ if [ -e /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 
 fi
 {{- end }}
 
-eval "$(starship init zsh)"
+zsh-defer eval "$(starship init zsh)"
 
 # Initialize completion
-# only load fresh once a day
-if [ "$(date +'%j')" != "$(stat -f '%Sm' -t '%j' ~/.zcompdump 2>/dev/null)" ]; then
-    compinit
-else
-    compinit -C
-fi
+zsh-defer compinit
 
 export LS_COLORS="$(vivid generate molokai)"
 

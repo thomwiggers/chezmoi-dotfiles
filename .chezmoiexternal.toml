@@ -3,3 +3,10 @@
 #    url = "https://github.com/tmux-plugins/tpm/archive/refs/heads/master.zip"
 #    exact = True
 #    refreshPeriod = "500h"
+
+[".zsh/zsh-defer"]
+    type = "archive"
+    url = "https://github.com/romkatv/zsh-defer/archive/refs/heads/master.zip"
+    exact = true
+    stripComponents = 1
+    refreshPeriod = "500h"
