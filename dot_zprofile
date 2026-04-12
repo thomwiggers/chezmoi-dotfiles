@@ -1,2 +1,0 @@
-eval "$(PATH="" /usr/libexec/path_helper)"
-source "$HOME/.zshenv"
