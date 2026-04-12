@@ -26,6 +26,11 @@ HISTSIZE=10000          # number of commands kept in memory for the current sess
 SAVEHIST=10000          # number of commands written to the history file on disk
 setopt appendhistory    # append to the history file instead of overwriting it on exit
 
+fpath=(
+    "$HOME/.zsh/zsh-defer"
+    $fpath
+)
+autoload -Uz zsh-defer
 
 autoload -Uz compinit
 zstyle ':completion:*' menu select
