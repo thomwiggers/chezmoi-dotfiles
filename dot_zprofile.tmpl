@@ -1,5 +1,4 @@
 {{ if eq .chezmoi.os "darwin" }}
 eval "$(PATH="" /usr/libexec/path_helper)"
-source "$HOME/.zshenv"
 export SSH_SK_PROVIDER=/usr/lib/ssh-keychain.dylib
 {{ end -}}
