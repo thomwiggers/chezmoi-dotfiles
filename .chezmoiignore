@@ -1,4 +1,5 @@
 CLAUDE.md
+.claude/
 key.txt.age
 .config/nvim/lazy-lock.json
 .config/nvim/lazyvim.json
