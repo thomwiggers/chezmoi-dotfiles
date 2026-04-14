@@ -3,6 +3,9 @@ export EDITOR=nvim
 typeset -U PATH path
 
 {{ if eq .chezmoi.os "darwin" }}
+eval "$(PATH="" /usr/libexec/path_helper)"
+
+export SSH_SK_PROVIDER=/usr/lib/ssh-keychain.dylib
 
 if [ -f /opt/homebrew/bin/brew ]; then
     eval $(/opt/homebrew/bin/brew shellenv zsh)
