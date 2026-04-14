@@ -59,14 +59,14 @@ source ~/.zsh/key-bindings.zsh
 
 {{ if eq .chezmoi.os "darwin" }}
 if [ -e /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
-    source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+    zsh-defer source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
 {{- end }}
 
 eval "$(starship init zsh)"
 
 # Initialize completion
-zsh-defer compinit
+compinit
 
 export LS_COLORS="$(vivid generate molokai)"
 
