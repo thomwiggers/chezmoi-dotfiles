@@ -3,6 +3,7 @@ export EDITOR=nvim
 typeset -U PATH path
 
 {{ if eq .chezmoi.os "darwin" }}
+# Resets paths on MacOS. No longer necessary?
 #eval "$(PATH="" /usr/libexec/path_helper)"
 
 export SSH_SK_PROVIDER=/usr/lib/ssh-keychain.dylib
