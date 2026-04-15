@@ -16,6 +16,7 @@ path=(
     "/opt/homebrew/opt/gnu-tar/libexec/bin"
     "/opt/homebrew/opt/python/libexec/bin"
     "/Applications/Docker.app/Contents/Resources/bin"
+    "$HOME/.local/bin"
     $path
 )
 
@@ -54,7 +55,6 @@ if [ -e "$HOME/.cargo/env" ]; then
 fi
 
 path=(
-    "$HOME/.local/bin"
     $path
 )
 export path
