@@ -62,6 +62,10 @@ if [ -e /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 
 fi
 {{- end }}
 
+if [ -n "$GHOSTTY_RESOURCES_DIR" ]; then
+    source "${GHOSTTY_RESOURCES_DIR}/shell-integration/zsh/ghostty-integration"
+fi
+
 eval "$(starship init zsh)"
 
 # Initialize completion
