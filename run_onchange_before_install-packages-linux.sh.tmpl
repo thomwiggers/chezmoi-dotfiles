@@ -1,8 +1,8 @@
 {{- $isDebian := false -}}
 {{- $isArch := false -}}
 {{- if eq .chezmoi.os "linux" -}}
-{{-   $isDebian = or (eq .chezmoi.osRelease.id "debian") (eq .chezmoi.osRelease.id "ubuntu") (contains "debian" (.chezmoi.osRelease.idLike | default "")) -}}
-{{-   $isArch = or (eq .chezmoi.osRelease.id "arch") (contains "arch" (.chezmoi.osRelease.idLike | default "")) -}}
+{{-   $isDebian = or (eq .chezmoi.osRelease.id "debian") (eq .chezmoi.osRelease.id "ubuntu") (contains "debian" (index .chezmoi.osRelease "idLike" | default "")) -}}
+{{-   $isArch = or (eq .chezmoi.osRelease.id "arch") (contains "arch" (index .chezmoi.osRelease "idLike" | default "")) -}}
 {{- end -}}
 {{- if or $isDebian $isArch -}}
 #!/bin/bash
