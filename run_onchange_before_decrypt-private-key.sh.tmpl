@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # key.txt.age hash: {{ include "key.txt.age" | sha256sum }}
-if [ ! -f "$CHEZMOI_DEST_DIR/.config/chezmoi/key.txt" ] && ! echo "$CHEZMOI_ARGS" | grep -q "--exclude encrypted"; then
+if [ ! -f "$CHEZMOI_DEST_DIR/.config/chezmoi/key.txt" ] && ! echo "$CHEZMOI_ARGS" | grep -q -- "--exclude encrypted"; then
   mkdir -p "$CHEZMOI_DEST_DIR/.config/chezmoi"
   $CHEZMOI_EXECUTABLE age decrypt --output "$CHEZMOI_DEST_DIR/.config/chezmoi/key.txt" --passphrase "{{ .chezmoi.sourceDir }}/key.txt.age"
   chmod 600 "$CHEZMOI_DEST_DIR/.config/chezmoi/key.txt"
