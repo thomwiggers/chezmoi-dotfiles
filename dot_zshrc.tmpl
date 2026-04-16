@@ -52,7 +52,9 @@ alias diff='diff --color=auto'
 
 # Remapped tools
 alias cat=bat
-alias vim=nvim
+if $(type python3 > /dev/null); then
+    alias vim=nvim
+fi
 
 source ~/.zsh/key-bindings.zsh
 
