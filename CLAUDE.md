@@ -40,19 +40,21 @@ Homebrew packages are declared in `run_onchange_before_install-packages-darwin.s
 
 ## Structure Overview
 
-| File | Target |
-|------|--------|
-| `dot_zshrc.tmpl` | `~/.zshrc` — aliases, completion, prompt |
-| `dot_zshenv.tmpl` | `~/.zshenv` — PATH, env vars, Homebrew setup |
-| `dot_zprofile` | `~/.zprofile` — login shell path initialization |
-| `exact_dot_zsh/` | `~/.zsh/` — key bindings |
-| `dot_gitconfig` | `~/.gitconfig` |
-| `dot_gitignore` | `~/.gitignore` |
-| `dot_tmux.conf` | `~/.tmux.conf` |
-| `private_dot_gnupg/` | `~/.gnupg/` |
-| `private_dot_ssh/` | `~/.ssh/` |
-| `.chezmoiexternal.toml` | External archives/repos (e.g. tmux plugins) |
+| File                    | Target                                          |
+| ----------------------- | ----------------------------------------------- |
+| `dot_zshrc.tmpl`        | `~/.zshrc` — aliases, completion, prompt        |
+| `dot_zshenv.tmpl`       | `~/.zshenv` — PATH, env vars, Homebrew setup    |
+| `dot_zprofile`          | `~/.zprofile` — login shell path initialization |
+| `exact_dot_zsh/`        | `~/.zsh/` — key bindings                        |
+| `dot_gitconfig`         | `~/.gitconfig`                                  |
+| `dot_gitignore`         | `~/.gitignore`                                  |
+| `dot_tmux.conf`         | `~/.tmux.conf`                                  |
+| `private_dot_gnupg/`    | `~/.gnupg/`                                     |
+| `private_dot_ssh/`      | `~/.ssh/`                                       |
+| `.chezmoiexternal.toml` | External archives/repos (e.g. tmux plugins)     |
 
 ## .chezmoiignore
 
 `CLAUDE.md` and `key.txt.age` are ignored by chezmoi (listed in `.chezmoiignore`) — they live in the source directory but are never applied to the home directory.
+
+When creating Claude memories, add any external memory files to `.chezmoiignore`.
