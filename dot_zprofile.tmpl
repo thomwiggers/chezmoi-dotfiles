@@ -37,19 +37,6 @@ export RIP_GRAVEYARD="$HOME/.Trash"
 export DOCKER_BUILDKIT=1
 export COMPOSE_DOCKER_CLI_BUILD=1
 
-# Python
-if $(type python3 > /dev/null); then
-    path=(
-        "$(python3 -m site --user-base)/bin"
-        $path
-    )
-elif $(type python > /dev/null); then
-    path=(
-        "$(python -m site --user-base)/bin"
-        $path
-    )
-fi
-
 if [ -e "$HOME/.cargo/env" ]; then
     source "$HOME/.cargo/env"
 fi
