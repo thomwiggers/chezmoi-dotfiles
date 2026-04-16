@@ -20,6 +20,8 @@ setopt MULTIBYTE         # enable multibyte character support (e.g. UTF-8)
 setopt COMBINING_CHARS   # treat combining characters (e.g. diacritics) as part of the base character
 setopt COMPLETE_ALIASES  # treat aliases as distinct commands for completion purposes
 
+zmodload zsh/zprof
+
 # HISTORY
 HISTSIZE=10000          # number of commands kept in memory for the current session
 SAVEHIST=10000          # number of commands written to the history file on disk
@@ -74,5 +76,7 @@ eval "$(starship init zsh)"
 compinit
 
 export LS_COLORS="$(vivid generate molokai)"
+
+zprof > /tmp/zprof.log
 
 # vim: set ft=zsh ts=4 sw=4 tw=0 et :
