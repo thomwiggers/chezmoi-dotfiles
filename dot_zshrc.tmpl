@@ -75,7 +75,7 @@ eval "$(starship init zsh)"
 # Initialize completion
 compinit
 
-export LS_COLORS="$(vivid generate molokai)"
+[[ -f ~/.cache/ls_colors ]] && export LS_COLORS="$(< ~/.cache/ls_colors)"
 
 zprof > /tmp/zprof.log
 

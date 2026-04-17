@@ -43,8 +43,8 @@ Homebrew packages are declared in `run_onchange_before_install-packages-darwin.s
 | File                    | Target                                          |
 | ----------------------- | ----------------------------------------------- |
 | `dot_zshrc.tmpl`        | `~/.zshrc` — aliases, completion, prompt        |
-| `dot_zshenv.tmpl`       | `~/.zshenv` — PATH, env vars, Homebrew setup    |
-| `dot_zprofile`          | `~/.zprofile` — login shell path initialization |
+| `dot_zshenv.tmpl`       | `~/.zshenv` — PATH, env vars, Homebrew setup (all shells) |
+| `dot_zprofile.tmpl`     | `~/.zprofile` — empty stub (login shells only)  |
 | `exact_dot_zsh/`        | `~/.zsh/` — key bindings                        |
 | `dot_gitconfig`         | `~/.gitconfig`                                  |
 | `dot_gitignore`         | `~/.gitignore`                                  |
