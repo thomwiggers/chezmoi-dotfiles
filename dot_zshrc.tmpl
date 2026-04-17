@@ -62,6 +62,8 @@ source ~/.zsh/key-bindings.zsh
 
 if [ -n "$HOMEBREW_PREFIX" ] && [ -e "$HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
     zsh-defer source "$HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+elif [ -e /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
+    zsh-defer source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
 
 if [ -n "$GHOSTTY_RESOURCES_DIR" ]; then
