@@ -4,6 +4,8 @@ brew = [
   "dust",
   "git",
   "git-delta",
+  "neovim",
+  "python",
   "ripgrep",
   "starship",
   "tmux",
@@ -12,14 +14,9 @@ brew = [
   "wget",
   "xz",
   "zsh",
+  "zsh-completions",
   "zsh-syntax-highlighting",
   "zstd",
 ]
 
-brew_darwin_extra = [
-  "gnu-sed",
-  "gnu-tar",
-  "neovim",
-  "python",
-  "zsh-completions",
-]
+brew_darwin_extra = ["gnu-sed", "gnu-tar"]
