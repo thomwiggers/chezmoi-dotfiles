@@ -12,41 +12,22 @@
 set -euo pipefail
 
 {{ if $isDebian -}}
-# Homebrew prerequisites (Debian/Ubuntu)
 sudo apt-get update -qq
 sudo apt-get install -y build-essential procps curl file git
 
 {{ else if $isArch -}}
-# Arch: all packages available in official repos
 sudo pacman -Syu --noconfirm --needed \
-    bat \
-    git \
-    git-delta \
-    dust \
-    ripgrep \
-    starship \
-    tmux \
-    uv \
-    vivid \
-    wget \
-    xz \
-    zsh \
-    zsh-syntax-highlighting \
-    zstd
-
+{{ range .packages.pacman }}    {{ . }} \
+{{ end }}
 {{ else if $isAmazonLinux -}}
-# Homebrew prerequisites (Amazon Linux 2023)
 sudo dnf groupinstall -y "Development Tools"
 sudo dnf install -y curl file git procps-ng
 
 {{ end -}}
 {{ if and (eq .chezmoi.os "linux") $useBrew -}}
-# Install Homebrew
 if ! command -v brew &>/dev/null; then
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
-
-# Add brew to PATH for this script session
 if [ -f /home/linuxbrew/.linuxbrew/bin/brew ]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 elif [ -f "$HOME/.linuxbrew/bin/brew" ]; then
@@ -56,29 +37,14 @@ fi
 {{ end -}}
 {{ if $useBrew -}}
 brew bundle --file=/dev/stdin <<'BREWFILE'
-brew "bat"
-brew "dust"
-brew "git"
-brew "git-delta"
-{{ if eq .chezmoi.os "darwin" -}}
-brew "gnu-sed"
-brew "gnu-tar"
-brew "neovim"
-brew "python"
+{{ range .packages.brew_common -}}
+brew "{{ . }}"
 {{ end -}}
-brew "ripgrep"
-brew "starship"
-brew "tmux"
-brew "uv"
-brew "vivid"
-brew "wget"
-brew "xz"
-brew "zsh"
 {{ if eq .chezmoi.os "darwin" -}}
-brew "zsh-completions"
+{{ range .packages.brew_darwin_extra -}}
+brew "{{ . }}"
 {{ end -}}
-brew "zsh-syntax-highlighting"
-brew "zstd"
+{{ end -}}
 BREWFILE
 {{ end -}}
 {{ end -}}

@@ -1,0 +1,42 @@
+[packages]
+brew_common = [
+  "bat",
+  "dust",
+  "git",
+  "git-delta",
+  "ripgrep",
+  "starship",
+  "tmux",
+  "uv",
+  "vivid",
+  "wget",
+  "xz",
+  "zsh",
+  "zsh-syntax-highlighting",
+  "zstd",
+]
+
+brew_darwin_extra = [
+  "gnu-sed",
+  "gnu-tar",
+  "neovim",
+  "python",
+  "zsh-completions",
+]
+
+pacman = [
+  "bat",
+  "dust",
+  "git",
+  "git-delta",
+  "ripgrep",
+  "starship",
+  "tmux",
+  "uv",
+  "vivid",
+  "wget",
+  "xz",
+  "zsh",
+  "zsh-syntax-highlighting",
+  "zstd",
+]
