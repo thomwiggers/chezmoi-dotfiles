@@ -6,17 +6,18 @@
 {{-   $isArch = or (eq .chezmoi.osRelease.id "arch") (contains "arch" (index .chezmoi.osRelease "idLike" | default "")) -}}
 {{-   $isAmazonLinux = and (eq .chezmoi.osRelease.id "amzn") (contains "2023" (index .chezmoi.osRelease "versionID" | default "")) -}}
 {{- end -}}
-{{- if or $isDebian $isArch $isAmazonLinux -}}
+{{- $useBrew := or (eq .chezmoi.os "darwin") $isDebian $isAmazonLinux -}}
+{{- if or $useBrew $isArch -}}
 #!/bin/bash
 set -euo pipefail
 
 {{ if $isDebian -}}
-# Install Homebrew prerequisites
+# Homebrew prerequisites (Debian/Ubuntu)
 sudo apt-get update -qq
 sudo apt-get install -y build-essential procps curl file git
 
 {{ else if $isArch -}}
-# Install pacman packages (all available in official repos)
+# Arch: all packages available in official repos
 sudo pacman -Syu --noconfirm --needed \
     bat \
     git \
@@ -34,12 +35,12 @@ sudo pacman -Syu --noconfirm --needed \
     zstd
 
 {{ else if $isAmazonLinux -}}
-# Install Homebrew prerequisites
+# Homebrew prerequisites (Amazon Linux 2023)
 sudo dnf groupinstall -y "Development Tools"
 sudo dnf install -y curl file git procps-ng
 
 {{ end -}}
-{{ if or $isDebian $isAmazonLinux -}}
+{{ if and (eq .chezmoi.os "linux") $useBrew -}}
 # Install Homebrew
 if ! command -v brew &>/dev/null; then
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -52,12 +53,19 @@ elif [ -f "$HOME/.linuxbrew/bin/brew" ]; then
     eval "$("$HOME/.linuxbrew/bin/brew" shellenv)"
 fi
 
+{{ end -}}
+{{ if $useBrew -}}
 brew bundle --file=/dev/stdin <<'BREWFILE'
 brew "bat"
 brew "dust"
 brew "git"
 brew "git-delta"
+{{ if eq .chezmoi.os "darwin" -}}
+brew "gnu-sed"
+brew "gnu-tar"
 brew "neovim"
+brew "python"
+{{ end -}}
 brew "ripgrep"
 brew "starship"
 brew "tmux"
@@ -66,9 +74,11 @@ brew "vivid"
 brew "wget"
 brew "xz"
 brew "zsh"
+{{ if eq .chezmoi.os "darwin" -}}
+brew "zsh-completions"
+{{ end -}}
 brew "zsh-syntax-highlighting"
 brew "zstd"
 BREWFILE
-
 {{ end -}}
 {{ end -}}
