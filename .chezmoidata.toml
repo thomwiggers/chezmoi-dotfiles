@@ -1,5 +1,5 @@
 [packages]
-brew_common = [
+brew = [
   "bat",
   "dust",
   "git",
@@ -22,21 +22,4 @@ brew_darwin_extra = [
   "neovim",
   "python",
   "zsh-completions",
-]
-
-pacman = [
-  "bat",
-  "dust",
-  "git",
-  "git-delta",
-  "ripgrep",
-  "starship",
-  "tmux",
-  "uv",
-  "vivid",
-  "wget",
-  "xz",
-  "zsh",
-  "zsh-syntax-highlighting",
-  "zstd",
 ]
