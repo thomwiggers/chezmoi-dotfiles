@@ -31,6 +31,12 @@ export HOMEBREW_BAT=true
 
 # for rip
 export RIP_GRAVEYARD="$HOME/.Trash"
+{{ else if eq .chezmoi.os "linux" }}
+test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+export HOMEBREW_NO_ENV_HINTS=true
+export HOMEBREW_BAT=true
 {{ end }}
 
 # For Docker

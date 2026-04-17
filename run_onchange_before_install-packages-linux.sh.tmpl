@@ -11,55 +11,9 @@
 set -euo pipefail
 
 {{ if $isDebian -}}
-# Install apt packages
+# Install Homebrew prerequisites
 sudo apt-get update -qq
-sudo apt-get install -y \
-    bat \
-    git \
-    ripgrep \
-    tmux \
-    wget \
-    xz-utils \
-    zsh \
-    zsh-syntax-highlighting \
-    zstd
-
-# bat is installed as 'batcat' on some Ubuntu/Debian versions; normalise it
-if ! command -v bat &>/dev/null && command -v batcat &>/dev/null; then
-    mkdir -p "$HOME/.local/bin"
-    ln -sf "$(command -v batcat)" "$HOME/.local/bin/bat"
-fi
-
-# dust (du replacement) — not in apt
-if ! command -v dust &>/dev/null; then
-    DUST_VERSION=$(curl -fsSL https://api.github.com/repos/bootandy/dust/releases/latest | grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/')
-    curl -fsSL "https://github.com/bootandy/dust/releases/latest/download/dust-v${DUST_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
-        | tar -xz --strip-components=1 -C "$HOME/.local/bin" "dust-v${DUST_VERSION}-x86_64-unknown-linux-musl/dust"
-fi
-
-# git-delta — not in apt
-if ! command -v delta &>/dev/null; then
-    DELTA_VERSION=$(curl -fsSL https://api.github.com/repos/dandavison/delta/releases/latest | grep '"tag_name"' | sed 's/.*"\([^"]*\)".*/\1/')
-    curl -fsSL "https://github.com/dandavison/delta/releases/latest/download/delta-${DELTA_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
-        | tar -xz --strip-components=1 -C "$HOME/.local/bin" "delta-${DELTA_VERSION}-x86_64-unknown-linux-musl/delta"
-fi
-
-# vivid (LS_COLORS generator) — not in apt
-if ! command -v vivid &>/dev/null; then
-    VIVID_VERSION=$(curl -fsSL https://api.github.com/repos/sharkdp/vivid/releases/latest | grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/')
-    curl -fsSL "https://github.com/sharkdp/vivid/releases/latest/download/vivid-v${VIVID_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
-        | tar -xz --strip-components=1 -C "$HOME/.local/bin" "vivid-v${VIVID_VERSION}-x86_64-unknown-linux-musl/vivid"
-fi
-
-# starship prompt
-if ! command -v starship &>/dev/null; then
-    curl -fsSL https://starship.rs/install.sh | sh -s -- --yes --bin-dir "$HOME/.local/bin"
-fi
-
-# uv (Python package manager)
-if ! command -v uv &>/dev/null; then
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-fi
+sudo apt-get install -y build-essential procps curl file git
 
 {{ else if $isArch -}}
 # Install pacman packages (all available in official repos)
@@ -80,61 +34,40 @@ sudo pacman -Syu --noconfirm --needed \
     zstd
 
 {{ else if $isAmazonLinux -}}
-mkdir -p "$HOME/.local/bin"
+# Install Homebrew prerequisites
+sudo dnf groupinstall -y "Development Tools"
+sudo dnf install -y curl file git procps-ng
 
-# Install dnf packages (Amazon Linux 2023)
-sudo dnf install -y \
-    git \
-    tmux \
-    wget \
-    xz \
-    zsh \
-    zstd
-
-# bat — not in standard AL2023 repos
-if ! command -v bat &>/dev/null; then
-    BAT_VERSION=$(curl -fsSL https://api.github.com/repos/sharkdp/bat/releases/latest | grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/')
-    curl -fsSL "https://github.com/sharkdp/bat/releases/latest/download/bat-v${BAT_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
-        | tar -xz --strip-components=1 -C "$HOME/.local/bin" "bat-v${BAT_VERSION}-x86_64-unknown-linux-musl/bat"
+{{ end -}}
+{{ if or $isDebian $isAmazonLinux -}}
+# Install Homebrew
+if ! command -v brew &>/dev/null; then
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
-# ripgrep — not in standard AL2023 repos
-if ! command -v rg &>/dev/null; then
-    RG_VERSION=$(curl -fsSL https://api.github.com/repos/BurntSushi/ripgrep/releases/latest | grep '"tag_name"' | sed 's/.*"\([^"]*\)".*/\1/')
-    curl -fsSL "https://github.com/BurntSushi/ripgrep/releases/latest/download/ripgrep-${RG_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
-        | tar -xz --strip-components=1 -C "$HOME/.local/bin" "ripgrep-${RG_VERSION}-x86_64-unknown-linux-musl/rg"
+# Add brew to PATH for this script session
+if [ -f /home/linuxbrew/.linuxbrew/bin/brew ]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+elif [ -f "$HOME/.linuxbrew/bin/brew" ]; then
+    eval "$("$HOME/.linuxbrew/bin/brew" shellenv)"
 fi
 
-# dust (du replacement) — not in AL2023 repos
-if ! command -v dust &>/dev/null; then
-    DUST_VERSION=$(curl -fsSL https://api.github.com/repos/bootandy/dust/releases/latest | grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/')
-    curl -fsSL "https://github.com/bootandy/dust/releases/latest/download/dust-v${DUST_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
-        | tar -xz --strip-components=1 -C "$HOME/.local/bin" "dust-v${DUST_VERSION}-x86_64-unknown-linux-musl/dust"
-fi
-
-# git-delta — not in AL2023 repos
-if ! command -v delta &>/dev/null; then
-    DELTA_VERSION=$(curl -fsSL https://api.github.com/repos/dandavison/delta/releases/latest | grep '"tag_name"' | sed 's/.*"\([^"]*\)".*/\1/')
-    curl -fsSL "https://github.com/dandavison/delta/releases/latest/download/delta-${DELTA_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
-        | tar -xz --strip-components=1 -C "$HOME/.local/bin" "delta-${DELTA_VERSION}-x86_64-unknown-linux-musl/delta"
-fi
-
-# vivid (LS_COLORS generator) — not in AL2023 repos
-if ! command -v vivid &>/dev/null; then
-    VIVID_VERSION=$(curl -fsSL https://api.github.com/repos/sharkdp/vivid/releases/latest | grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/')
-    curl -fsSL "https://github.com/sharkdp/vivid/releases/latest/download/vivid-v${VIVID_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
-        | tar -xz --strip-components=1 -C "$HOME/.local/bin" "vivid-v${VIVID_VERSION}-x86_64-unknown-linux-musl/vivid"
-fi
-
-# starship prompt
-if ! command -v starship &>/dev/null; then
-    curl -fsSL https://starship.rs/install.sh | sh -s -- --yes --bin-dir "$HOME/.local/bin"
-fi
-
-# uv (Python package manager)
-if ! command -v uv &>/dev/null; then
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-fi
+brew bundle --file=/dev/stdin <<'BREWFILE'
+brew "bat"
+brew "dust"
+brew "git"
+brew "git-delta"
+brew "ripgrep"
+brew "starship"
+brew "tmux"
+brew "uv"
+brew "vivid"
+brew "wget"
+brew "xz"
+brew "zsh"
+brew "zsh-syntax-highlighting"
+brew "zstd"
+BREWFILE
 
 {{ end -}}
 {{ end -}}

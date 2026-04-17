@@ -60,11 +60,9 @@ fi
 
 source ~/.zsh/key-bindings.zsh
 
-{{ if eq .chezmoi.os "darwin" }}
-if [ -e /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
-    zsh-defer source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+if [ -n "$HOMEBREW_PREFIX" ] && [ -e "$HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
+    zsh-defer source "$HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 fi
-{{- end }}
 
 if [ -n "$GHOSTTY_RESOURCES_DIR" ]; then
     source "${GHOSTTY_RESOURCES_DIR}/shell-integration/zsh/ghostty-integration"
