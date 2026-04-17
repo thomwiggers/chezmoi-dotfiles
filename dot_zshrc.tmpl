@@ -29,9 +29,12 @@ setopt appendhistory    # append to the history file instead of overwriting it o
 
 fpath=(
     "$HOME/.zsh/zsh-defer"
+    "$HOME/.zsh/completions"
     $fpath
 )
 autoload -Uz zsh-defer
+
+source "$HOME/.zsh/functions.sh"
 
 autoload -Uz compinit
 zstyle ':completion:*' menu select
