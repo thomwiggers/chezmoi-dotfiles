@@ -1,1 +1,25 @@
 # vim: set ft=zsh ts=4 sw=4 et :
+
+typeset -U PATH path
+{{ if eq .chezmoi.os "darwin" }}
+# Changing the PATH variable in .zshenv on MacOS leads to MacOS messing with the order
+if [[ -z "$HOMEBREW_PREFIX" && -f /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv zsh)"
+fi
+
+path=(
+    "/opt/homebrew/opt/gnu-tar/libexec/bin"
+    "/opt/homebrew/opt/python/libexec/bin"
+    "/Applications/Docker.app/Contents/Resources/bin"
+    "$HOME/.local/bin"
+    $path
+)
+
+{{ end }}
+
+if [ -e "$HOME/.cargo/env" ]; then
+    source "$HOME/.cargo/env"
+fi
+
+
+export PATH
