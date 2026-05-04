@@ -1,3 +1,6 @@
+{{ if ne .chezmoi.os "darwin" }}
+Library/**
+{{ end }}
 CLAUDE.md
 .claude/MEMORY.md
 .claude/feedback_chezmoi_template_verification.md
