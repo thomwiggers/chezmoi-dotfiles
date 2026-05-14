@@ -4,7 +4,7 @@
       "Bash(git checkout:*)",
       "Bash(git add:*)"
     ],
-    "defaultMode": "default"
+    "defaultMode": "{{ .claude.default_mode }}"
   },
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true,
@@ -22,5 +22,7 @@
     }
   },
   "remoteControlAtStartup": true,
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "theme": "auto",
+  "skipDangerousModePermissionPrompt": "{{ if ne .claude.default_mode "default" }}true{{ else }}false{{ end }}",
 }

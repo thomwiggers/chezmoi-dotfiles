@@ -24,3 +24,12 @@ encryption = "age"
 [data.cpu]
     cores = {{ $cpuCores }}
     threads = {{ $cpuThreads }}
+
+
+{{- $claude_default_mode := "default" }}
+{{- if eq $computerName "development" }}
+{{-   $claude_default_mode = "bypassPermissions" }}
+{{- end }}
+
+[data.claude]
+    default_mode = "{{ $claude_default_mode }}"
