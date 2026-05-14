@@ -15,14 +15,10 @@ path=(
 )
 
 {{ end }}
+
 if [ -e "$HOME/.cargo/env" ]; then
     source "$HOME/.cargo/env"
 fi
-
-path=(
-    "$HOME/.local/bin"
-    $path
-)
 
 
 export PATH
