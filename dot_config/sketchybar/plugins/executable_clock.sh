@@ -1,8 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 
-# The $NAME variable is passed from sketchybar and holds the name of
-# the item invoking this script:
-# https://felixkratz.github.io/SketchyBar/config/events#events-and-scripting
+# Enhanced clock script with better date formatting
 
-sketchybar --set "$NAME" label="$(date '+%d/%m %H:%M')"
+DATE=$(date '+%a %b %d')
+TIME=$(date '+%H:%M')
+
+sketchybar --set "$NAME" icon="$(date '+%d')" label="$DATE  $TIME"
 
