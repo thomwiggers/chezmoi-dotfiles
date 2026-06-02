@@ -3,6 +3,10 @@ export EDITOR=nvim
 typeset -U PATH path
 typeset -U fpath
 
+export HOMEBREW_NO_ENV_HINTS=true
+export HOMEBREW_BAT=true
+export HOMEBREW_REQUIRE_TAP_TRUST=1
+
 {{ if eq .chezmoi.os "darwin" }}
 export SSH_SK_PROVIDER=/usr/lib/ssh-keychain.dylib
 
@@ -11,16 +15,10 @@ fpath=(
     $fpath
 )
 
-export HOMEBREW_NO_ENV_HINTS=true
-export HOMEBREW_BAT=true
-
 export RIP_GRAVEYARD="$HOME/.Trash"
 {{ else if eq .chezmoi.os "linux" }}
 test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
 test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-export HOMEBREW_NO_ENV_HINTS=true
-export HOMEBREW_BAT=true
 {{ end }}
 
 path=(
