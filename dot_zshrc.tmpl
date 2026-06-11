@@ -25,6 +25,7 @@ zmodload zsh/zprof
 # HISTORY
 HISTSIZE=10000          # number of commands kept in memory for the current session
 SAVEHIST=10000          # number of commands written to the history file on disk
+HISTFILE="$HOME/.zsh/history"
 setopt appendhistory    # append to the history file instead of overwriting it on exit
 
 fpath=(
