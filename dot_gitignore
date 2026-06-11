@@ -3,3 +3,5 @@
 .DS_Store
 .gdb_history
 .env
+
+**/.claude/settings.local.json
