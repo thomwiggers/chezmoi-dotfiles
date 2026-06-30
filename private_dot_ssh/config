@@ -1,0 +1,5 @@
+# Ephemeral VMs reuse names with different host keys; network is the trust boundary.
+Host *.ide-nessie.ts.net *.incus
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    LogLevel ERROR
