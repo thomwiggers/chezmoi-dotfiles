@@ -60,19 +60,11 @@
 [push]
 	default = simple
 	autoSetupRemote = true
-[url "git@github.com:"]
-	pushInsteadOf = git://github.com/
-[url "git@bitbucket.org:"]
-	pushInsteadOf = https://bitbucket.org/
-[url "git@github.com:thomwiggers"]
-	pushInsteadOf = "https://github.com/thomwiggers"
-[url "git@github.com:thomwiggers/"]
-	pushInsteadOf = "git://github.com/thomwiggers/"
 [merge]
 	tool = vimdiff
 	conflictstyle = diff3
 [commit]
-	gpgsign = on
+	gpgsign = off
 [transfer]
 	fsckobjects = true
 [fetch]
