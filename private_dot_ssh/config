@@ -1,5 +1,29 @@
+CanonicalizeHostname yes
+CanonicalDomains incus ide-nessie.ts.net
+
+# For tab completion
+HashKnownHosts no
+
+Host *
+  AddKeysToAgent yes
+  ControlMaster auto
+  ControlPersist yes
+  ControlPath ~/.ssh/sockets/%r@%h:%p
+  TCPKeepAlive yes
+  ServerAliveInterval 20
+
 # Ephemeral VMs reuse names with different host keys; network is the trust boundary.
 Host *.ide-nessie.ts.net *.incus
-    StrictHostKeyChecking no
-    UserKnownHostsFile /dev/null
-    LogLevel ERROR
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+  LogLevel ERROR
+
+Host gitlab.pqsh.net
+  Hostname 10.1.9.163
+  Port 1223
+  ProxyJump bastion01.pqsh.net
+
+Host bastion01.pqsh.net
+  Hostname 95.154.247.251
+  Port 1323
+  User jumpuser

@@ -1,3 +1,11 @@
+{{- $gh := "gh" -}}
+{{- if eq .chezmoi.os "darwin" -}}
+{{-   if eq .chezmoi.arch "arm64" -}}
+{{-     $gh = "/opt/homebrew/bin/gh" -}}
+{{-   else -}}
+{{-     $gh = "/usr/local/bin/gh" -}}
+{{-   end -}}
+{{- end -}}
 #  vim: set ts=4 sw=4 tw=0 ft=gitconfig noet :
 
 [user]
@@ -93,7 +101,7 @@
 	defaultBranch = main
 [credential "https://github.com"]
         helper =
-        helper = !/opt/homebrew/bin/gh auth git-credential
+        helper = !{{ $gh }} auth git-credential
 [credential "https://gist.github.com"]
         helper =
-        helper = !/opt/homebrew/bin/gh auth git-credential
+        helper = !{{ $gh }} auth git-credential
