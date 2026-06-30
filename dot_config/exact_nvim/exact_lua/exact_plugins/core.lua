@@ -1,8 +1,17 @@
 return {
-    {
-        "LazyVim/LazyVim",
-        opts = {
-            colorscheme = "tokyonight",
-        },
+  {
+    "LazyVim/LazyVim",
+    opts = {
+      colorscheme = "ghostty-default-style-dark",
     },
+  },
+  {
+    "nkxxll/ghostty-default-style-dark.nvim",
+    lazy = false,
+    priority = 1000,
+    config = function()
+      require("ghostty-default-style-dark").setup({})
+      vim.cmd.colorscheme("ghostty-default-style-dark")
+    end
+  }
 }
