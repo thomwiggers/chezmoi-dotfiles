@@ -25,4 +25,5 @@
   "agentPushNotifEnabled": true,
   "theme": "auto",
   "tui": "fullscreen",
+  "skipDangerousModePermissionPrompt": {{ if ne .claude.default_mode "default" }}true{{ else }}false{{ end }}
 }
