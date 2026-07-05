@@ -14,15 +14,16 @@ if (( ${+terminfo[smkx]} )) && (( ${+terminfo[rmkx]} )); then
   zle -N zle-line-init
   zle -N zle-line-finish
 
-  # zle-line-finish never runs on abrupt SSH disconnect, leaving the terminal
-  # in application keypad mode (smkx) — causing garbage from scroll/arrow keys.
-  # Resetting in precmd fixes the state before every prompt (survives reconnects).
+  # DECSTR (soft terminal reset) — resets mouse tracking, kitty keyboard
+  # protocol, bracketed paste, and application keypad mode without clearing
+  # the screen. Runs before every prompt so abrupt SSH disconnects (which skip
+  # remote cleanup handlers) don't leave the local terminal in a broken state.
   autoload -Uz add-zsh-hook
-  function _reset_term_keypad() {
-    echoti rmkx 2>/dev/null
+  function _reset_term() {
+    printf '\e[!p'
   }
-  add-zsh-hook precmd _reset_term_keypad
-  add-zsh-hook zshexit _reset_term_keypad
+  add-zsh-hook precmd _reset_term
+  add-zsh-hook zshexit _reset_term
 fi
 
 bindkey -e                                            # Use emacs key bindings
