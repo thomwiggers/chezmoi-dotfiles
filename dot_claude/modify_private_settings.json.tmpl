@@ -1,10 +1,17 @@
-{
+{{- /* Merge shared defaults into ~/.claude/settings.json without clobbering
+       keys managed elsewhere (model, notification prefs, etc.).
+       chezmoi passes the current file on stdin; stdout becomes the new file. */ -}}
+#!/bin/bash
+set -euo pipefail
+
+input=$(cat)
+if [ -z "$input" ]; then
+  input='{}'
+fi
+
+defaults='{
   "permissions": {
-    "allow": [
-      "Bash(git checkout:*)",
-      "Bash(git add:*)"
-    ],
-    "defaultMode": "{{ .claude.default_mode }}"
+    "defaultMode": {{ .claude.default_mode | quote }}
   },
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true,
@@ -26,4 +33,15 @@
   "theme": "auto",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": {{ if ne .claude.default_mode "default" }}true{{ else }}false{{ end }}
-}
+}'
+
+allow='[
+  "Bash(git add:*)",
+  "Bash(git log:*)",
+  "Bash(git status:*)"
+]'
+
+printf '%s\n' "$input" | jq --argjson defaults "$defaults" --argjson allow "$allow" '
+  . * $defaults
+  | .permissions.allow = (((.permissions.allow // []) + $allow) | unique)
+'

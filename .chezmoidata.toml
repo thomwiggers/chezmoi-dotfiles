@@ -5,6 +5,7 @@ brew = [
   "gh",
   "git",
   "git-delta",
+  "jq",
   "neovim",
   "python",
   "ripgrep",
