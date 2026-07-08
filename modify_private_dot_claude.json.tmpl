@@ -1,0 +1,21 @@
+{{- /* Merge shared defaults into ~/.claude.json without clobbering
+       machine-local state (projects, oauthAccount, caches, telemetry, etc.).
+       chezmoi passes the current file on stdin; stdout becomes the new file. */ -}}
+#!/bin/bash
+set -euo pipefail
+
+input=$(cat)
+if [ -z "$input" ]; then
+  input='{}'
+fi
+
+defaults='{
+  "prStatusFooterEnabled": true,
+  "workflowSizeGuideline": "small",
+  "hasSeenAutoModeEntryWarning": true,
+  "hasOpenedAgentsView": true
+}'
+
+printf '%s\n' "$input" | jq --argjson defaults "$defaults" '
+  . * $defaults
+'
