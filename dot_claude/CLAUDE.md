@@ -16,6 +16,8 @@ You are working for Thom Wiggers.
 ## Python Tooling
 - Use `uv` for package management (not pip/pipenv/conda)
 - Use `ruff` for formatting and linting
+- Fix lint/format issues by running `ruff check --fix` and `ruff format`, not
+  by hand-editing style/formatting — run the tool, then re-read the diff
 
 ## Docker
 - Name Docker Compose files `compose.yaml` (not `docker-compose.yml`)
