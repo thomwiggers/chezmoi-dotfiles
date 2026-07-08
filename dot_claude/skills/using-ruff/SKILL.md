@@ -52,6 +52,10 @@ import unused_thing  # noqa: F401
 
 Prefer a narrow `# noqa: <code>` over a bare `# noqa` (silences everything) or a project-wide ignore (hides the rule everywhere, not just here).
 
+## Project CLAUDE.md
+
+If a project uses ruff (ruff config in `pyproject.toml`, a `ruff.toml`, or a pre-commit hook), make sure that project's `CLAUDE.md` also states: fix lint/format issues by running `ruff check --fix` / `ruff format`, not by hand-editing. Add it if missing — don't rely on this skill or global instructions alone to be loaded in every session.
+
 ## Pre-commit integration
 
 ```yaml
