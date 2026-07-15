@@ -1,0 +1,5 @@
+$pdf_previewer = 'open -a Skim.app "%S"';
+$pdflatex = 'pdflatex -synctex=15 -interaction=nonstopmode';
+@generated_exts = (@generated_exts, 'synctex.gz');
+
+$pdf_mode = 1;
