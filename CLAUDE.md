@@ -22,6 +22,10 @@ Files ending in `.tmpl` use Go template syntax with chezmoi variables. Common va
 - `{{ .chezmoi.pathSeparator }}` — `/` on Unix
 - `{{ include "file" | sha256sum }}` — used in `run_onchange_before_` scripts to trigger re-runs when a file changes
 
+## Git Workflow
+
+Commit directly to `main` — no feature branches or PRs for this repo. Chezmoi also autocommits changes to `main` by default.
+
 ## Applying Changes
 
 ```sh
