@@ -12,7 +12,11 @@ Host *
   TCPKeepAlive yes
   ServerAliveInterval 20
 
-# Ephemeral VMs reuse names with different host keys; network is the trust boundary.
+Host github.com
+  ControlPersist no
+  ControlMaster no
+
+  # Ephemeral VMs reuse names with different host keys; network is the trust boundary.
 Host *.ide-nessie.ts.net *.incus
   StrictHostKeyChecking no
   UserKnownHostsFile /dev/null
@@ -27,3 +31,17 @@ Host bastion01.pqsh.net
   Hostname 95.154.247.251
   Port 1323
   User jumpuser
+
+Host cocytus
+  Hostname cocytus.ide-nessie.ts.net
+  ForwardAgent yes
+  User thom
+  RemoteForward /run/user/1000/gnupg/S.gpg-agent /Users/thom/.gnupg/S.gpg-agent.extra
+
+Host eprint
+  #Hostname eprint.iacr.org
+  Hostname 64.227.104.178
+  ForwardAgent False
+  User wiggers
+
+
