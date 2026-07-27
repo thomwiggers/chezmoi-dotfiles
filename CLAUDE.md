@@ -44,6 +44,21 @@ Homebrew packages are declared in `.chezmoidata.toml` (`packages.brew`, plus `pa
 
 The per-OS `run_onchange_before_install-packages-*.sh.tmpl` scripts install the platform build prerequisites, then include the shared `.chezmoitemplates/brew-install.sh` block, which installs Homebrew if missing and runs `brew bundle`. Editing either the data file or the shared template changes the rendered script, so `chezmoi apply` re-runs it.
 
+### Scripts that depend on brew-installed tools (e.g. `jq`)
+
+Each `run_onchange_*`/`modify_*` script chezmoi runs is its own subprocess. On
+a fresh machine, the `run_onchange_before_install-packages-*` script installs
+Homebrew and does `eval "$(brew shellenv)"` to put it on `PATH` — but that
+`PATH` update dies with that subprocess and never reaches later scripts
+(e.g. `modify_private_dot_claude.json.tmpl`, `dot_claude/modify_private_settings.json.tmpl`),
+which still see the original pre-Homebrew `PATH` from whatever invoked
+`chezmoi init --apply`.
+
+Any script/template that shells out to a brew-installed tool must locate
+`brew` itself first — source the shared `.chezmoitemplates/brew-shellenv.sh`
+template at the top of the script (`{{ template "brew-shellenv.sh" . }}`)
+before relying on that tool being on `PATH`.
+
 ## Structure Overview
 
 | File                    | Target                                          |
