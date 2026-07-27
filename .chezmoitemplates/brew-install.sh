@@ -6,21 +6,8 @@ formulae=(
 {{ end }}{{- if eq .chezmoi.os "darwin" }}{{ range .packages.brew_darwin_extra }}  "{{ . }}"
 {{ end }}{{- end }})
 
-# A non-interactive shell (cloud-init, CI) has no Homebrew in PATH even when it
-# is installed, so locate it rather than trusting `command -v`.
-brew_shellenv() {
-    local candidate
-    for candidate in /opt/homebrew/bin/brew /usr/local/bin/brew \
-                     /home/linuxbrew/.linuxbrew/bin/brew "$HOME/.linuxbrew/bin/brew"; do
-        if [ -x "$candidate" ]; then
-            eval "$("$candidate" shellenv)"
-            return 0
-        fi
-    done
-    return 1
-}
-
-if ! command -v brew >/dev/null 2>&1 && ! brew_shellenv; then
+{{ template "brew-shellenv.sh" . }}
+if ! command -v brew >/dev/null 2>&1; then
     for attempt in 1 2 3; do
         if NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
             break
@@ -28,7 +15,7 @@ if ! command -v brew >/dev/null 2>&1 && ! brew_shellenv; then
         echo "homebrew installer failed (attempt ${attempt}/3); retrying in $((attempt * 15))s" >&2
         sleep $((attempt * 15))
     done
-    brew_shellenv || true
+{{ template "brew-shellenv.sh" . }}
 fi
 
 if ! command -v brew >/dev/null 2>&1; then

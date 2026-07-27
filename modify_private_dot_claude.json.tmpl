@@ -4,6 +4,7 @@
 #!/bin/bash
 set -euo pipefail
 
+{{ template "brew-shellenv.sh" . }}
 input=$(cat)
 if [ -z "$input" ]; then
   input='{}'
