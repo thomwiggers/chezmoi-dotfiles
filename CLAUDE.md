@@ -38,9 +38,11 @@ chezmoi status         # show managed files with pending changes
 
 `key.txt.age` is an age-encrypted private key. The `run_onchange_before_decrypt-private-key.sh.tmpl` script decrypts it to `~/.config/chezmoi/key.txt` on first apply. Do not edit or commit changes to `key.txt.age` without understanding the encryption setup.
 
-## Package Management (macOS)
+## Package Management
 
-Homebrew packages are declared in `run_onchange_before_install-packages-darwin.sh.tmpl` as a `brew bundle` inline Brewfile. Add new packages there; the script runs automatically on `chezmoi apply` when it changes.
+Homebrew packages are declared in `.chezmoidata.toml` (`packages.brew`, plus `packages.brew_darwin_extra` for macOS-only formulae). Add new packages there.
+
+The per-OS `run_onchange_before_install-packages-*.sh.tmpl` scripts install the platform build prerequisites, then include the shared `.chezmoitemplates/brew-install.sh` block, which installs Homebrew if missing and runs `brew bundle`. Editing either the data file or the shared template changes the rendered script, so `chezmoi apply` re-runs it.
 
 ## Structure Overview
 

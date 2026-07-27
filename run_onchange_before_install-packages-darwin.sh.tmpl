@@ -2,12 +2,5 @@
 #!/bin/bash
 set -euo pipefail
 
-brew bundle --file=/dev/stdin <<'BREWFILE'
-{{ range .packages.brew -}}
-brew "{{ . }}"
-{{ end -}}
-{{ range .packages.brew_darwin_extra -}}
-brew "{{ . }}"
-{{ end -}}
-BREWFILE
+{{ template "brew-install.sh" . }}
 {{- end -}}
