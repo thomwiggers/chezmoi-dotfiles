@@ -31,7 +31,12 @@ defaults='{
     }
   },
   "sandbox": {
-    "enabled": true
+    "enabled": true,
+    "allowRead": [
+      "~/.gitattributes",
+      "~/.gitconfig",
+      "~/.gitignore"
+    ]
   },
   "outputStyle": "concise",
   "remoteControlAtStartup": true,
