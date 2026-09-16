@@ -5,7 +5,6 @@ typeset -U fpath
 
 export HOMEBREW_NO_ENV_HINTS=true
 export HOMEBREW_BAT=true
-export HOMEBREW_REQUIRE_TAP_TRUST=1
 
 {{ if eq .chezmoi.os "darwin" }}
 export SSH_SK_PROVIDER=/usr/lib/ssh-keychain.dylib
