@@ -4,6 +4,7 @@ Library/**
 CLAUDE.md
 .claude/MEMORY.md
 .claude/feedback_chezmoi_template_verification.md
+.claude/worktrees/**
 key.txt.age
 .config/nvim/lazy-lock.json
 .config/nvim/lazyvim.json
