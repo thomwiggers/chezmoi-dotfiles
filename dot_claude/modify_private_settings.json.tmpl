@@ -58,10 +58,33 @@ allow='[
   "Bash(git status:*)"
 ]'
 
-printf '%s\n' "$input" | jq --argjson defaults "$defaults" --argjson allow "$allow" '
+# The Xcode command-line-tool shims (/usr/bin/python3, /usr/bin/git, /usr/bin/make)
+# write a lookup cache into the per-user temp dir; without write access there they
+# print a warning on every invocation before handing off to the real binary.
+# The path is derived from the account UUID, so resolve it at apply time instead
+# of hardcoding it. Both /var/... and its /private/... realpath are listed
+# because the sandbox matches on the resolved path.
+sandbox_write='[]'
+{{ if eq .chezmoi.os "darwin" -}}
+user_tmp="$(getconf DARWIN_USER_TEMP_DIR)"
+user_tmp="${user_tmp%/}"
+if [ -n "$user_tmp" ]; then
+  sandbox_write=$(jq -n --arg t "$user_tmp" '
+    [$t] + (if ($t | startswith("/var/")) then ["/private" + $t] else [] end)
+  ')
+fi
+{{- end }}
+
+printf '%s\n' "$input" | jq \
+  --argjson defaults "$defaults" \
+  --argjson allow "$allow" \
+  --argjson sandbox_write "$sandbox_write" '
   . * $defaults
   # Older versions of this template wrote these to the wrong level; the
   # sandbox only reads sandbox.filesystem.allowRead/allowWrite.
   | del(.sandbox.allowRead, .sandbox.allowWrite)
   | .permissions.allow = (((.permissions.allow // []) + $allow) | unique)
+  | if ($sandbox_write | length) > 0
+    then .sandbox.filesystem.allowWrite = (((.sandbox.filesystem.allowWrite // []) + $sandbox_write) | unique)
+    else . end
 '
