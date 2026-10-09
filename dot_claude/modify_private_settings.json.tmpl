@@ -5,8 +5,9 @@
        (lxcfs overmounts it under LXC/Incus; Docker and Podman mask parts of
        it), so reuse the container's /proc. Docker marks its containers with
        /.dockerenv, Podman with /run/.containerenv, and systemd records any
-       container type in /run/systemd/container. */ -}}
-{{- $container := or (stat "/.dockerenv") (stat "/run/.containerenv") (and (stat "/run/systemd/container") (ne (include "/run/systemd/container" | trim) "")) -}}
+       container type in /run/systemd/container. Apple's container leaves no
+       marker, so thom-container sets $container (the systemd convention). */ -}}
+{{- $container := or (env "container") (stat "/.dockerenv") (stat "/run/.containerenv") (and (stat "/run/systemd/container") (ne (include "/run/systemd/container" | trim) "")) -}}
 #!/bin/bash
 set -euo pipefail
 
