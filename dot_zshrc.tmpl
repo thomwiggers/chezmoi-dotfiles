@@ -62,17 +62,6 @@ if $(type python3 > /dev/null); then
     alias vim=nvim
 fi
 
-# Hand Claude Code the gh token as GH_TOKEN: its sandbox masks it, injects
-# the real value only on requests to GitHub, and denies ~/.config/gh/hosts.yml.
-claude() {
-    local token
-    if [ -z "${GH_TOKEN:-}" ] && token=$(command gh auth token 2>/dev/null); then
-        GH_TOKEN=$token command claude "$@"
-    else
-        command claude "$@"
-    fi
-}
-
 source ~/.zsh/key-bindings.zsh
 
 if [ -n "$HOMEBREW_PREFIX" ] && [ -e "$HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then

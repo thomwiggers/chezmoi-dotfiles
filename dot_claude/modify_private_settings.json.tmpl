@@ -35,7 +35,8 @@ defaults='{
       "git push", "git push *",
       "git clone *",
       "git ls-remote *",
-      "git submodule update *"
+      "git submodule update *",
+      "gh", "gh *"
     ],
     "credentials": {
       "files": [
@@ -111,12 +112,17 @@ fi
 {{- end }}
 
 # macOS keychain CLI; the sandbox can't block keychain access via securityd.
-# gh's token reaches Claude only as the masked GH_TOKEN (see the claude()
-# wrapper in ~/.zshrc); keep it from reading gh's own credential store.
+# gh runs outside the sandbox (excludedCommands) so it can read its token
+# from ~/.config/gh/hosts.yml or the keychain, which the sandbox denies.
+# Block the subcommands that print the token or run arbitrary code there.
 deny='[
   "Bash(security:*)",
   "Bash(/usr/bin/security:*)",
-  "Bash(gh auth token:*)",
+  "Bash(gh auth:*)",
+  "Bash(gh config:*)",
+  "Bash(gh alias:*)",
+  "Bash(gh extension:*)",
+  "Bash(gh ext:*)",
   "Read(~/.config/gh/hosts.yml)"
 ]'
 
