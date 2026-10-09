@@ -7,7 +7,7 @@
 set -euo pipefail
 
 sudo dnf groupinstall -y "Development Tools"
-sudo dnf install -y curl file git procps-ng
+sudo dnf install -y curl file git procps-ng bubblewrap socat
 
 {{ template "brew-install.sh" . }}
 {{- end -}}

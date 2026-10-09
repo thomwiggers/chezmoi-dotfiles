@@ -24,6 +24,15 @@ defaults='{
   "enableWorkflows": true,
   "sandbox": {
     "enabled": true,
+    "failIfUnavailable": true,
+    "credentials": {
+      "files": [
+        { "path": "~/.ssh", "mode": "deny" },
+        { "path": "~/.gnupg", "mode": "deny" },
+        { "path": "~/.config/chezmoi/key.txt", "mode": "deny" }{{ if eq .chezmoi.os "darwin" }},
+        { "path": "~/Library/Keychains", "mode": "deny" }{{ end }}
+      ]
+    },
     "filesystem": {
       "allowRead": [
         "~/.gitattributes",
