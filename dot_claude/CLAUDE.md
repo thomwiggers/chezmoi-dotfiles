@@ -13,6 +13,12 @@ You are working for Thom Wiggers.
   create a new branch for it
 - Stage specific files rather than `git add .` or `git add -A`
 
+## Sandbox and GitHub credentials
+- `gh` and git network commands (`git push`, `git pull`, `git fetch`, …) only
+  run outside the sandbox, where they can read the GitHub token, when they are
+  the entire command. Run them on their own: no `cd … &&`, pipes, or chaining,
+  or they run sandboxed and fail to authenticate.
+
 ## Python Tooling
 - Use `uv` for package management (not pip/pipenv/conda)
 - Use `ruff` for formatting and linting
