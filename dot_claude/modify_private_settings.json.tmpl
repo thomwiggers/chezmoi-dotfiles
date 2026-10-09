@@ -1,9 +1,12 @@
 {{- /* Merge shared defaults into ~/.claude/settings.json without clobbering
        keys managed elsewhere (model, notification prefs, etc.).
        chezmoi passes the current file on stdin; stdout becomes the new file. */ -}}
-{{- /* bubblewrap can't mount a fresh /proc inside an unprivileged LXC/Incus
-       container (lxcfs overmounts /proc), so reuse the container's /proc. */ -}}
-{{- $lxc := and (stat "/run/systemd/container") (eq (include "/run/systemd/container" | trim) "lxc") -}}
+{{- /* bubblewrap can't mount a fresh /proc inside unprivileged containers
+       (lxcfs overmounts it under LXC/Incus; Docker and Podman mask parts of
+       it), so reuse the container's /proc. Docker marks its containers with
+       /.dockerenv, Podman with /run/.containerenv, and systemd records any
+       container type in /run/systemd/container. */ -}}
+{{- $container := or (stat "/.dockerenv") (stat "/run/.containerenv") (and (stat "/run/systemd/container") (ne (include "/run/systemd/container" | trim) "")) -}}
 #!/bin/bash
 set -euo pipefail
 
@@ -28,7 +31,7 @@ defaults='{
   "sandbox": {
     "enabled": true,
     "failIfUnavailable": true,
-    "enableWeakerNestedSandbox": {{ if $lxc }}true{{ else }}false{{ end }},
+    "enableWeakerNestedSandbox": {{ if $container }}true{{ else }}false{{ end }},
     "excludedCommands": [
       "git fetch", "git fetch *",
       "git pull", "git pull *",
