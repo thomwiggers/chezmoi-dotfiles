@@ -49,7 +49,7 @@ defaults='{
   "agentPushNotifEnabled": true,
   "theme": "auto",
   "tui": "fullscreen",
-  "skipDangerousModePermissionPrompt": {{ if ne .claude.default_mode "default" }}true{{ else }}false{{ end }}
+  "skipDangerousModePermissionPrompt": {{ if eq .claude.default_mode "bypassPermissions" }}true{{ else }}false{{ end }}
 }'
 
 allow='[

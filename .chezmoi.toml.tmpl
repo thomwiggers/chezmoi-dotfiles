@@ -26,7 +26,7 @@ encryption = "age"
     threads = {{ $cpuThreads }}
 
 
-{{- $claude_default_mode := "default" }}
+{{- $claude_default_mode := "auto" }}
 {{- if eq $computerName "development" }}
 {{-   $claude_default_mode = "bypassPermissions" }}
 {{- end }}
