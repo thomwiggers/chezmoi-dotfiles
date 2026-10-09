@@ -6,7 +6,7 @@
 #!/bin/bash
 set -euo pipefail
 
-sudo pacman -Sy --needed --noconfirm base-devel curl file git
+sudo pacman -Sy --needed --noconfirm base-devel curl file git bubblewrap socat
 
 {{ template "brew-install.sh" . }}
 {{- end -}}

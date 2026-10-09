@@ -1,0 +1,15 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+# One-time setup for devbox (https://github.com/thomwiggers/thom-container):
+# start Apple's container system service. `container` comes from brew.
+set -euo pipefail
+
+{{ template "brew-shellenv.sh" . }}
+if ! command -v container >/dev/null 2>&1; then
+    echo "warning: Apple's 'container' CLI is not installed; skipping devbox setup" >&2
+    exit 0
+fi
+
+# Explicit kernel flag so it doesn't prompt during chezmoi apply.
+container system status >/dev/null 2>&1 || container system start --enable-kernel-install
+{{- end -}}

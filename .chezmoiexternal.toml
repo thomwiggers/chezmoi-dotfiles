@@ -10,3 +10,11 @@
     exact = true
     stripComponents = 1
     refreshPeriod = "500h"
+
+# devbox launcher for https://github.com/thomwiggers/thom-container (macOS only,
+# see .chezmoiignore)
+[".local/bin/devbox"]
+    type = "file"
+    url = "https://raw.githubusercontent.com/thomwiggers/thom-container/main/bin/devbox"
+    executable = true
+    refreshPeriod = "168h"

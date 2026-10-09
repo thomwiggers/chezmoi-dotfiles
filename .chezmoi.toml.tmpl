@@ -1,10 +1,8 @@
 {{- $cpuCores := 1 }}
 {{- $cpuThreads := 1 }}
-{{- $computerName := .chezmoi.hostname }}
 {{- if eq .chezmoi.os "darwin" }}
 {{-   $cpuCores = (output "sysctl" "-n" "hw.physicalcpu_max") | trim | atoi }}
 {{-   $cpuThreads = (output "sysctl" "-n" "hw.logicalcpu_max") | trim | atoi }}
-{{-   $computerName = (output "scutil" "--get" "ComputerName") | trim }}
 {{- else if eq .chezmoi.os "linux" }}
 {{-   $cpuCores = (output "sh" "-c" "lscpu --online --parse | grep --invert-match '^#' | sort --field-separator=',' --key='2,4' --unique | wc --lines") | trim | atoi }}
 {{-   $cpuThreads = (output "sh" "-c" "lscpu --online --parse | grep --invert-match '^#' | wc --lines") | trim | atoi }}
@@ -26,10 +24,7 @@ encryption = "age"
     threads = {{ $cpuThreads }}
 
 
-{{- $claude_default_mode := "default" }}
-{{- if eq $computerName "development" }}
-{{-   $claude_default_mode = "bypassPermissions" }}
-{{- end }}
+{{- $claude_default_mode := "auto" }}
 
 [data.claude]
     default_mode = "{{ $claude_default_mode }}"

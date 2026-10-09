@@ -13,7 +13,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt_opts=(-o DPkg::Lock::Timeout=600 -o Acquire::Retries=3)
 
 sudo apt-get "${apt_opts[@]}" update -qq
-sudo apt-get "${apt_opts[@]}" install -y build-essential procps curl file git
+sudo apt-get "${apt_opts[@]}" install -y build-essential procps curl file git bubblewrap socat
 
 {{ template "brew-install.sh" . }}
 {{- end -}}
