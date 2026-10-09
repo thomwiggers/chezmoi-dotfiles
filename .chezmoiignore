@@ -1,5 +1,6 @@
 {{ if ne .chezmoi.os "darwin" }}
 Library/**
+.local/bin/devbox
 {{ end }}
 CLAUDE.md
 .claude/MEMORY.md

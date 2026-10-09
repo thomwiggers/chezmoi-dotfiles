@@ -21,4 +21,4 @@ brew = [
   "zstd",
 ]
 
-brew_darwin_extra = ["gnu-sed", "gnu-tar"]
+brew_darwin_extra = ["container", "gnu-sed", "gnu-tar"]
