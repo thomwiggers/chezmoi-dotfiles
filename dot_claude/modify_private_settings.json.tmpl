@@ -25,6 +25,14 @@ defaults='{
   "sandbox": {
     "enabled": true,
     "failIfUnavailable": true,
+    "excludedCommands": [
+      "git fetch", "git fetch *",
+      "git pull", "git pull *",
+      "git push", "git push *",
+      "git clone *",
+      "git ls-remote *",
+      "git submodule update *"
+    ],
     "credentials": {
       "files": [
         { "path": "~/.ssh", "mode": "deny" },
