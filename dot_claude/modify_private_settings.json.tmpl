@@ -59,7 +59,13 @@ allow='[
   "Bash(git status:*)"
 ]'
 
-printf '%s\n' "$input" | jq --argjson defaults "$defaults" --argjson allow "$allow" '
+# macOS keychain CLI; the sandbox can't block keychain access via securityd.
+deny='[
+  "Bash(security:*)",
+  "Bash(/usr/bin/security:*)"
+]'
+
+printf '%s\n' "$input" | jq --argjson defaults "$defaults" --argjson allow "$allow" --argjson deny "$deny" '
   . * $defaults
   # Older versions of this template wrote these to the wrong level; the
   # sandbox only reads sandbox.filesystem.allowRead/allowWrite.
@@ -67,4 +73,5 @@ printf '%s\n' "$input" | jq --argjson defaults "$defaults" --argjson allow "$all
   # Caveman plugin was previously enabled by this template; remove it.
   | del(.enabledPlugins["caveman@caveman"], .extraKnownMarketplaces.caveman)
   | .permissions.allow = (((.permissions.allow // []) + $allow) | unique)
+  | .permissions.deny = (((.permissions.deny // []) + $deny) | unique)
 '
