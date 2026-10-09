@@ -110,11 +110,6 @@ if [ -n "$user_tmp" ]; then
 fi
 {{- end }}
 
-printf '%s\n' "$input" | jq \
-  --argjson defaults "$defaults" \
-  --argjson allow "$allow" \
-  --argjson sandbox_write "$sandbox_write" '
-
 # macOS keychain CLI; the sandbox can't block keychain access via securityd.
 # gh's token reaches Claude only as the masked GH_TOKEN (see the claude()
 # wrapper in ~/.zshrc); keep it from reading gh's own credential store.
@@ -125,7 +120,11 @@ deny='[
   "Read(~/.config/gh/hosts.yml)"
 ]'
 
-printf '%s\n' "$input" | jq --argjson defaults "$defaults" --argjson allow "$allow" --argjson deny "$deny" '
+printf '%s\n' "$input" | jq \
+  --argjson defaults "$defaults" \
+  --argjson allow "$allow" \
+  --argjson deny "$deny" \
+  --argjson sandbox_write "$sandbox_write" '
   . * $defaults
   # Older versions of this template wrote these to the wrong level; the
   # sandbox only reads sandbox.filesystem.allowRead/allowWrite.
