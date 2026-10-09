@@ -41,7 +41,8 @@ defaults='{
       "files": [
         { "path": "~/.ssh", "mode": "deny" },
         { "path": "~/.gnupg", "mode": "deny" },
-        { "path": "~/.config/chezmoi/key.txt", "mode": "deny" }{{ if eq .chezmoi.os "darwin" }},
+        { "path": "~/.config/chezmoi/key.txt", "mode": "deny" },
+        { "path": "~/.config/gh/hosts.yml", "mode": "deny" }{{ if eq .chezmoi.os "darwin" }},
         { "path": "~/Library/Keychains", "mode": "deny" }{{ end }}
       ],
       "envVars": [
@@ -115,9 +116,13 @@ printf '%s\n' "$input" | jq \
   --argjson sandbox_write "$sandbox_write" '
 
 # macOS keychain CLI; the sandbox can't block keychain access via securityd.
+# gh's token reaches Claude only as the masked GH_TOKEN (see the claude()
+# wrapper in ~/.zshrc); keep it from reading gh's own credential store.
 deny='[
   "Bash(security:*)",
-  "Bash(/usr/bin/security:*)"
+  "Bash(/usr/bin/security:*)",
+  "Bash(gh auth token:*)",
+  "Read(~/.config/gh/hosts.yml)"
 ]'
 
 printf '%s\n' "$input" | jq --argjson defaults "$defaults" --argjson allow "$allow" --argjson deny "$deny" '
