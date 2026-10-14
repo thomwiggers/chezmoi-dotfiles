@@ -17,4 +17,4 @@
     type = "file"
     url = "https://raw.githubusercontent.com/thomwiggers/thom-container/main/bin/devbox"
     executable = true
-    refreshPeriod = "168h"
+    refreshPeriod = "1m"
