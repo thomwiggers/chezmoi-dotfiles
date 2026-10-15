@@ -2,7 +2,8 @@
 # Compare a Home Manager build against chezmoi's rendering of every managed
 # target on *this* machine (chezmoi only renders for the OS it runs on).
 #
-#   ./verify.sh [role]      role defaults to linux on Linux, darwin on macOS
+#   ./verify.sh [role]      role defaults to linux on Linux, darwin on macOS;
+#                           the configuration used is $(id -un)@<role>
 #
 # Each target is reported as
 #   OK         identical (byte-for-byte or via a semantic comparator)
@@ -20,12 +21,13 @@ role=${1:-$default_role}
 
 cd "$(dirname "$0")" || exit 1
 export NIX_CONFIG="experimental-features = nix-command flakes"
-hm=".#homeConfigurations.\"thom@$role\""
+user=$(id -un)
+hm=".#homeConfigurations.\"$user@$role\""
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
-echo "building thom@$role ..." >&2
+echo "building $user@$role ..." >&2
 nix build -o "$work/result" "$hm.activationPackage" || exit 1
 hf="$work/result/home-files"
 container=$(nix eval "$hm.config.thom.container")

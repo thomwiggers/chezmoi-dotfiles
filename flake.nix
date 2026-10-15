@@ -43,16 +43,38 @@
         };
       };
 
+      # Account names in use; every role is offered for each of them.
+      users = [
+        "thom"
+        "thomwiggers"
+      ];
+
       mkHome =
-        role:
+        user: role:
         home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.${role.system};
           extraSpecialArgs = { inherit inputs; };
           modules = [
             ./home.nix
             role.module
+            (
+              { pkgs, ... }:
+              {
+                home.username = user;
+                home.homeDirectory =
+                  if pkgs.stdenv.hostPlatform.isDarwin then "/Users/${user}" else "/home/${user}";
+              }
+            )
           ];
         };
+
+      # [ { name = "<user>@<role>"; value = { user; role; }; } ... ]
+      configs = nixpkgs.lib.concatMap (
+        user:
+        nixpkgs.lib.mapAttrsToList (
+          name: role: nixpkgs.lib.nameValuePair "${user}@${name}" { inherit user role; }
+        ) roles
+      ) users;
 
       systems = [
         "x86_64-linux"
@@ -62,16 +84,20 @@
       forAllSystems = nixpkgs.lib.genAttrs systems;
     in
     {
-      homeConfigurations = nixpkgs.lib.mapAttrs' (
-        name: role: nixpkgs.lib.nameValuePair "thom@${name}" (mkHome role)
-      ) roles;
+      homeConfigurations = nixpkgs.lib.mapAttrs (_: c: mkHome c.user c.role) (
+        nixpkgs.lib.listToAttrs configs
+      );
 
-      # `nix flake check` builds every role native to the checking machine.
+      # `nix flake check` builds every configuration native to the checking
+      # machine.
       checks = forAllSystems (
         system:
-        nixpkgs.lib.mapAttrs' (
-          name: role: nixpkgs.lib.nameValuePair "home-${name}" (mkHome role).activationPackage
-        ) (nixpkgs.lib.filterAttrs (_: role: role.system == system) roles)
+        nixpkgs.lib.listToAttrs (
+          map (c: {
+            name = "home-" + nixpkgs.lib.replaceStrings [ "@" ] [ "-" ] c.name;
+            value = (mkHome c.value.user c.value.role).activationPackage;
+          }) (nixpkgs.lib.filter (c: c.value.role.system == system) configs)
+        )
       );
 
       # Pinned Home Manager CLI, used by bootstrap.sh.

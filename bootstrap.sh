@@ -46,12 +46,17 @@ darwin | linux | linux-arm | chroot) ;;
 esac
 [[ $role == chroot && $os != Linux ]] && die "the chroot role is Linux-only"
 
-# home.username/homeDirectory are fixed in home.nix; Home Manager refuses
-# to activate for another account.
-want_home=/home/thom
-[[ $os == Darwin ]] && want_home=/Users/thom
-[[ $(id -un) == thom && $HOME == "$want_home" ]] ||
-	die "this configuration is for user thom with HOME=$want_home (got $(id -un), $HOME); adjust home.nix"
+# Configurations exist per account (`users` in flake.nix) with a fixed home
+# directory; Home Manager refuses to activate for anything else.
+user=$(id -un)
+case "$user" in
+thom | thomwiggers) ;;
+*) die "no configuration for user $user; add it to \`users\` in flake.nix" ;;
+esac
+want_home=/home/$user
+[[ $os == Darwin ]] && want_home=/Users/$user
+[[ $HOME == "$want_home" ]] ||
+	die "configurations assume HOME=$want_home (got $HOME); adjust mkHome in flake.nix"
 
 need curl
 [[ $os == Linux ]] && need xz "the Nix installer tarball is xz-compressed"
@@ -141,10 +146,10 @@ fi
 
 # --- 3. Home Manager ------------------------------------------------------------
 
-say "Activating thom@$role"
+say "Activating $user@$role"
 # -b: files Home Manager would overwrite (e.g. chezmoi-written dotfiles) are
 # kept as <file>.hm-bak.
-in_nix nix run "$repo#home-manager" -- switch -b hm-bak --flake "$repo#thom@$role"
+in_nix nix run "$repo#home-manager" -- switch -b hm-bak --flake "$repo#$user@$role"
 
 # --- 4. Entering the chroot -------------------------------------------------------
 
