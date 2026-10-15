@@ -23,7 +23,7 @@
   };
 
   # Reference dump of Ghostty's defaults; Ghostty only runs on the Macs.
-  xdg.configFile."ghostty/default.config" = lib.mkIf pkgs.stdenv.isDarwin {
+  xdg.configFile."ghostty/default.config" = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
     source = ../files/ghostty/default.config;
   };
 }

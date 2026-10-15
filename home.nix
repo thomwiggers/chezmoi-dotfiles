@@ -9,10 +9,11 @@
     ./modules/options.nix
     ./modules/files.nix
     ./modules/zsh.nix
+    ./modules/git.nix
   ];
 
   home.username = "thom";
-  home.homeDirectory = if pkgs.stdenv.isDarwin then "/Users/thom" else "/home/thom";
+  home.homeDirectory = if pkgs.stdenv.hostPlatform.isDarwin then "/Users/thom" else "/home/thom";
   home.stateVersion = "25.11";
 
   programs.home-manager.enable = true;
