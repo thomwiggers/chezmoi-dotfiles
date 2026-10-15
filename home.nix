@@ -17,6 +17,7 @@
     ./modules/claude.nix
     ./modules/packages.nix
     ./modules/ghostty.nix
+    ./modules/scripts.nix
   ];
 
   home.username = "thom";
