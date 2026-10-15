@@ -1,195 +1,219 @@
 # chezmoi → Home Manager migration
 
-Status: **Step 1 (inventory) — awaiting review.** Nothing below is implemented yet.
+Status: **implemented on branch `hm-migration`; not yet activated anywhere.**
+`nix flake check` passes, every role evaluates, the x86_64-linux roles build,
+and `./verify.sh` reports `ok=33 explained=13 mismatch=0` on this machine.
 
-Inventory sources: `chezmoi managed` (run on Linux host `development`, Debian 13),
-`chezmoi data`, the source tree, and `.chezmoiignore` (which hides darwin-only
-targets on Linux — those rows are added by hand below).
+The chezmoi sources are still in the repo, untouched (only `.chezmoiignore`
+gained entries hiding the new files). Nothing has been deleted.
 
-## 1. Managed targets
+## Layout
+
+| Path | What |
+|---|---|
+| `flake.nix` | nixpkgs (unstable) + home-manager (follows nixpkgs) + `thom-container` (devbox). `homeConfigurations."thom@<role>"`, `checks`, `packages.home-manager` (pinned CLI) |
+| `home.nix` | shared entry point; imports `modules/*` |
+| `hosts/<role>.nix` | per-role differences (`thom.container`, genericLinux) |
+| `modules/options.nix` | `thom.container`, `thom.claude.defaultMode` |
+| `modules/zsh.nix` | programs.zsh, programs.starship, session vars |
+| `modules/git.nix` | programs.git, programs.gh, programs.gpg |
+| `modules/tmux.nix` | programs.tmux |
+| `modules/ssh.nix` | programs.ssh (+ Include of the encrypted part) |
+| `modules/ghostty.nix` | programs.ghostty (darwin only) |
+| `modules/packages.nix` | CLI tools (was the Homebrew list) |
+| `modules/claude.nix` | Claude Code settings merges (activation) |
+| `modules/secrets.nix` / `secret-files.nix` | age decryption at activation / which file goes where |
+| `modules/scripts.nix` | former `run_` scripts and externals |
+| `modules/files.nix` + `files/` | files deployed verbatim (nvim, zsh helpers, Claude md, latexmkrc) |
+| `secrets/*.age` | the chezmoi ciphertexts, copied byte-for-byte |
+| `bootstrap.sh` | fresh-machine setup (root or nix-user-chroot) |
+| `verify.sh` | compares the build with chezmoi's rendering |
+
+## Roles
+
+Nothing in the chezmoi setup keyed on hostname; the real axes were OS, arch
+and "inside a container". Configurations are therefore per role:
+
+| Config | System | `thom.container` | Notes |
+|---|---|---|---|
+| `thom@darwin` | aarch64-darwin | false | Macs |
+| `thom@linux` | x86_64-linux | true | e.g. `development` (Incus/LXC) |
+| `thom@linux-arm` | aarch64-linux | true | devbox under Apple's container |
+| `thom@chroot` | x86_64-linux | false | no root; Nix in `~/.nix` via nix-user-chroot |
+
+`thom.container` replaces chezmoi's runtime detection (`$container`,
+`/.dockerenv`, `/run/.containerenv`, `/run/systemd/container`) and only feeds
+Claude Code's `sandbox.enableWeakerNestedSandbox`. Add a role (or override in a
+host file) if a machine doesn't fit.
+
+## Target-by-target mapping
 
 Type key: **S** static · **T** template · **E** age-encrypted · **M** `modify_`
-script (merges into an app-owned file) · **R** `run_` script · **X** external ·
-**L** symlink.
+script · **R** `run_` script · **X** external · **L** symlink.
 
-### Shell
-
-| Target | Source | Type | Planned HM mechanism |
+| Old target | chezmoi source | Type | Now |
 |---|---|---|---|
-| `~/.zshenv` | `dot_zshenv.tmpl` | T (os) | `programs.zsh.envExtra` (+ `home.sessionVariables` where 1:1) |
-| `~/.zprofile` | `dot_zprofile.tmpl` | T (os) | `programs.zsh.profileExtra` |
-| `~/.zshrc` | `dot_zshrc.tmpl` | T (os) | `programs.zsh.initContent` with `lib.mkOrder`; `completionInit` set explicitly to reproduce the current bare `compinit` |
-| `~/.zsh/functions.sh` | `exact_dot_zsh/functions.sh` | S | `home.file` (dir becomes HM-owned, so "exact" is implicit) |
-| `~/.zsh/key-bindings.zsh` | `exact_dot_zsh/executable_key-bindings.zsh` | S (+x) | `home.file` with `executable = true` |
-| `~/.zsh/completions/_package` | `exact_dot_zsh/completions/_package` | S | `home.file` |
-| `~/.zsh/zsh-defer/**` | `.chezmoiexternal.toml` | X (archive, 500h refresh) | `pkgs.zsh-defer` (nixpkgs, 2022-06-13 = upstream HEAD); sourced from store path, `~/.zsh/zsh-defer` no longer created |
-| `~/.config/starship.toml` | `dot_config/starship.toml` | S | `programs.starship.settings` (TOML → Nix attrset) or keep as `xdg.configFile` — see Q7 |
+| `~/.zshrc` | `dot_zshrc.tmpl` | T | `programs.zsh` (`setOptions`, `history`, `shellAliases`, `initContent` with `mkOrder` 500/550/1000/1450/1500, `completionInit = ""`) |
+| `~/.zshenv` | `dot_zshenv.tmpl` | T | `home.sessionVariables` / `home.sessionPath` + `envExtra` |
+| `~/.zprofile` | `dot_zprofile.tmpl` | T | `programs.zsh.profileExtra` |
+| `~/.zsh/{functions.sh,key-bindings.zsh,completions/_package}` | `exact_dot_zsh/` | S | `home.file` from `files/zsh/` |
+| `~/.zsh/zsh-defer/**` | `.chezmoiexternal.toml` | X | `pkgs.zsh-defer` (store path on `fpath`) |
+| `~/.config/starship.toml` | `dot_config/starship.toml` | S | `programs.starship.settings` |
+| `~/.gitconfig` | `dot_gitconfig.tmpl` | T | `programs.git.settings` → `~/.config/git/config` |
+| `~/.gitignore` | `dot_gitignore` | S | `programs.git.ignores` → `~/.config/git/ignore` |
+| `~/.gitattributes` | `dot_gitattributes` | S | `programs.git.attributes` → `~/.config/git/attributes` |
+| `~/.config/gh/config.yml` | `dot_config/gh/private_config.yml` | S | `programs.gh.settings` (+ `gitCredentialHelper`) |
+| `~/.gnupg/gpg.conf` | `private_dot_gnupg/gpg.conf` | S | `programs.gpg.settings` (`mkForce`, keyrings stay mutable) |
+| `~/.tmux.conf` | `dot_tmux.conf` | S | `programs.tmux` → `~/.config/tmux/tmux.conf` |
+| `~/.ssh/config` | `private_dot_ssh/encrypted_config.age` | E | `programs.ssh` writes `Include config.private`; the ciphertext decrypts to `~/.ssh/config.private` |
+| `~/.ssh/sockets/` | `private_dot_ssh/private_sockets/.keep` | S | activation `mkdir` + `chmod 700` |
+| `~/.config/ghostty/config.ghostty` | `dot_config/ghostty/config.ghostty` | S | `programs.ghostty.settings` → `~/.config/ghostty/config`, darwin only, `package = null` |
+| `~/.config/ghostty/default.config` | same dir | S | `xdg.configFile`, darwin only |
+| `~/.config/nvim/**` | `dot_config/exact_nvim/` | S | `xdg.configFile."nvim"` with `recursive = true` (dir stays writable for lazy.nvim) |
+| `~/.config/halloy/config.toml`, `themes/catppucin light.toml` | `encrypted_*` | E | `thom.age.secrets` |
+| `~/.config/senpai/senpai.scfg` | `encrypted_private_senpai.scfg.age` | E | `thom.age.secrets` |
+| `~/.config/runitor/hc_key` | `encrypted_hc_key.age` | E | `thom.age.secrets` |
+| `~/Library/Application Support/senpai/senpai.scfg` (darwin) | `symlink_senpai.scfg` | L | `mkOutOfStoreSymlink` |
+| `~/.latexmkrc` | `dot_latexmkrc` | S | `home.file` |
+| `~/.claude/CLAUDE.md`, `~/.claude/skills/using-ruff/SKILL.md` | `dot_claude/` | S | `home.file` |
+| `~/.claude.json` | `modify_private_dot_claude.json.tmpl` | M | `home.activation.claudeSettings` (same jq merge) |
+| `~/.claude/settings.json` | `dot_claude/modify_private_settings.json.tmpl` | M | same; container flag per role, `DARWIN_USER_TEMP_DIR` still resolved at activation |
+| `~/.local/bin/devbox` (darwin) | `.chezmoiexternal.toml` | X | flake input `thom-container` |
+| `~/.tmux/plugins/tpm` | `.chezmoiexternal.toml` (commented out) | X | dropped |
+| — | `run_after_generate-ls-colors.sh` | R | `~/.cache/ls_colors` rendered at build time with vivid |
+| — | `run_after_nvim_sync.sh` | R | `home.activation.nvimLazySync` |
+| — | `run_onchange_after_setup-thom-container.sh.tmpl` | R | `home.activation.containerSystem` (darwin) |
+| — | `run_onchange_before_install-packages-*.sh.tmpl` + `.chezmoidata.toml` | R | `home.packages` (`modules/packages.nix`); Homebrew dropped |
+| — | `run_onchange_before_decrypt-private-key.sh.tmpl` | R | `bootstrap.sh` step 2 |
 
-### Git / GPG / SSH
+Template variables: `.chezmoi.os` → `pkgs.stdenv.hostPlatform.isDarwin`;
+`.chezmoi.arch` (gh path) → `${pkgs.gh}`; `.chezmoi.osRelease.*` → gone (no
+distro packages); `.claude.default_mode` → `thom.claude.defaultMode`;
+`.packages.*` → `modules/packages.nix`; `.cpu.*` was unused and is dropped.
 
-| Target | Source | Type | Planned HM mechanism |
-|---|---|---|---|
-| `~/.gitconfig` | `dot_gitconfig.tmpl` | T (os, arch → `gh` path) | `programs.git` (+ `programs.git.delta` / `programs.delta`); gh path → `"${pkgs.gh}/bin/gh"` on all hosts. HM writes `~/.config/git/config`, not `~/.gitconfig` — see notes |
-| `~/.gitignore` | `dot_gitignore` | S | `programs.git.ignores` or `home.file` (path referenced by `core.excludesfile`) |
-| `~/.gitattributes` | `dot_gitattributes` | S | `programs.git.attributes` or `home.file` |
-| `~/.gnupg/gpg.conf` | `private_dot_gnupg/gpg.conf` | S (0700 dir) | `programs.gpg.settings` or `home.file`; HM's gpg module manages dir perms |
-| `~/.ssh/config` | `private_dot_ssh/encrypted_config.age` | E | **Cannot become `programs.ssh` without decrypting** (ground rule). Plan: secret file → `~/.ssh/config` — see Q4 |
-| `~/.ssh/sockets/` | `private_dot_ssh/private_sockets/.keep` | S (empty dir, 0700) | `home.activation` `mkdir -m700 -p` (HM can't own a writable empty dir via symlinks) |
+## Decisions
 
-### Terminal / editor / apps
+- **Secrets: age directly, not sops-nix/agenix.** The age identity is a
+  post-quantum `mlkem768x25519` key (needs age ≥ 1.3; nixpkgs has 1.3.2).
+  sops 3.13's support for it is unverified, and agenix's HM module decrypts
+  through a systemd user service that nix-user-chroot and containers lack.
+  `modules/secrets.nix` runs `age --decrypt` at activation into 0600 files.
+  Ciphertext is in the Nix store; plaintext never is. The chezmoi ciphertexts
+  are reused unchanged (same recipient), so **no re-encryption is needed**.
+  New secret: `age -e -r <recipient> -a -o secrets/x.age`, then add an entry to
+  `modules/secret-files.nix`. Identity moved to `~/.config/age/keys.txt`.
+- **SSH:** everything in `programs.ssh` is world-readable in the store, so
+  host blocks stay encrypted and are `Include`d. Move non-sensitive hosts into
+  `programs.ssh.matchBlocks` when convenient.
+- **Homebrew dropped** everywhere. Apple's `container` comes from nixpkgs.
+  GUI apps (Ghostty) are installed outside Nix.
+- **compinit** now rebuilds `.zcompdump` at most daily (`compinit -C`
+  otherwise). It still runs last, as before. The module's slot (570) was
+  tried and broke completion key bindings, because `key-bindings.zsh` runs
+  `bindkey -e` afterwards.
+- **tmux**: no plugins (all were commented out). Every option the module
+  emits is pinned to tmux's built-in default, including `keyMode = "vi"`
+  because tmux picks vi keys when `$EDITOR` contains "vi".
+- **nix-user-chroot** (`thom@chroot`): HM's symlinks point into `/nix/store`,
+  which only exists inside the chroot. `bootstrap.sh` installs a static
+  nix-user-chroot (pinned 2.1.1, sha256-checked), puts single-user Nix in
+  `~/.nix`, and appends a guarded block to `~/.bash_profile` that `exec`s
+  `nix-user-chroot ~/.nix ~/.nix-profile/bin/zsh -l` for interactive logins.
+  The host login shell must be bash. Non-interactive ssh commands run outside
+  the chroot (`nix-user-chroot ~/.nix <cmd>` to get in).
 
-| Target | Source | Type | Planned HM mechanism |
-|---|---|---|---|
-| `~/.tmux.conf` | `dot_tmux.conf` | S | `programs.tmux` with all module defaults pinned to current values, `extraConfig` for the rest. **No plugins** — every `@plugin` and TPM line is commented out today, and the TPM external is commented out too |
-| `~/.config/ghostty/config.ghostty` | `dot_config/ghostty/config.ghostty` | S | `programs.ghostty.settings`, `package = null` on darwin (Linux: also `null`? see Q6) |
-| `~/.config/ghostty/default.config` | `dot_config/ghostty/default.config` | S (4091-line default dump) | `xdg.configFile` unchanged (reference only) |
-| `~/.config/nvim/**` (13 files) | `dot_config/exact_nvim/**` | S (exact) | `xdg.configFile."nvim".source` with `recursive = true` — lazy.nvim writes `lazy-lock.json`/`lazyvim.json` into this dir, so it must stay a real dir |
-| `~/.config/gh/config.yml` | `dot_config/gh/private_config.yml` | S | `programs.gh.settings`. Note `gh config set` will fail on a store symlink — acceptable? |
-| `~/.config/halloy/config.toml` | `dot_config/exact_halloy/encrypted_config.toml.age` | E | secret → path |
-| `~/.config/halloy/themes/catppucin light.toml` | `…/exact_private_themes/encrypted_catppucin light.toml.age` | E | secret → path |
-| `~/.config/senpai/senpai.scfg` | `dot_config/exact_senpai/encrypted_private_senpai.scfg.age` | E | secret → path |
-| `~/.config/runitor/hc_key` | `dot_config/runitor/encrypted_hc_key.age` | E | secret → path |
-| `~/Library/Application Support/senpai/senpai.scfg` *(darwin only)* | `private_Library/…/symlink_senpai.scfg` | L → `/Users/thom/.config/senpai/senpai.scfg` | `home.file.<>.source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/senpai/senpai.scfg"`, darwin only |
-| `~/.latexmkrc` | `dot_latexmkrc` | S (uses `open -a Skim.app` — mac-only behaviour, deployed everywhere today) | `home.file` |
+## Verification
 
-### Claude Code
+`./verify.sh [role]` builds the role and compares every chezmoi target on
+the current machine. Run it on a Mac for `darwin`; this x86_64-linux box can
+only *evaluate* the aarch64 roles, and `chezmoi cat` only renders for the
+current OS.
 
-| Target | Source | Type | Planned HM mechanism |
-|---|---|---|---|
-| `~/.claude/CLAUDE.md` | `dot_claude/CLAUDE.md` | S | `home.file` |
-| `~/.claude/skills/using-ruff/SKILL.md` | `dot_claude/skills/using-ruff/SKILL.md` | S | `home.file` |
-| `~/.claude.json` | `modify_private_dot_claude.json.tmpl` | M (jq merge) | `home.activation` (after `writeBoundary`) running the same jq merge with `${pkgs.jq}`; **must not** be a store symlink — Claude Code writes this file constantly |
-| `~/.claude/settings.json` | `dot_claude/modify_private_settings.json.tmpl` | M (jq merge; os + container detection + `DARWIN_USER_TEMP_DIR`) | same: `home.activation` jq merge; container detection and `getconf DARWIN_USER_TEMP_DIR` move into the activation script at run time (they can't be evaluated purely) — see Q5 |
+Comparators: byte diff by default. Semantic comparison where a module
+reformats:
 
-### Externals
+| Target | Comparison |
+|---|---|
+| `.gitconfig` | sorted `git config --list` |
+| `.tmux.conf` | `tmux show-options -g/-gw/-s` from a scratch server |
+| `starship.toml` / `gh/config.yml` | parsed TOML / YAML |
+| `gpg.conf` | option lines, comments stripped, sorted |
+| `.zshrc` (+ `.zshenv`, `.zprofile`) | interactive login zsh in scratch HOMEs: `setopt`, `alias`, `bindkey`, `zstyle -L`, function names |
+| `.claude.json`, `settings.json` | both jq merges applied to `{}` |
+| encrypted | path only (never rendered) |
 
-| Target | Source | Type | Planned HM mechanism |
-|---|---|---|---|
-| `~/.zsh/zsh-defer` | `.chezmoiexternal.toml` | X | `pkgs.zsh-defer` (above) |
-| `~/.local/bin/devbox` *(darwin only)* | `.chezmoiexternal.toml` (raw file, `refreshPeriod = 1m`) | X | flake input `thom-container` (`flake = false`) → `home.file.".local/bin/devbox"`. **Behaviour change:** updates only on `nix flake update`, not every minute |
-| `~/.tmux/plugins/tpm` | `.chezmoiexternal.toml` | X (commented out) | dropped (unused) |
+Known, explained differences (all deliberate):
 
-### `run_` scripts
+1. `.config/git/config` vs `.gitconfig`: `core.excludesfile` and
+   `core.attributesfile` are gone because git reads `~/.config/git/*` by
+   default. The gh helper is a store path, not `gh`/`/opt/homebrew/bin/gh`.
+   `off` is now `false`.
+2. tmux: `set-environment PATH` swaps `/opt/homebrew/bin` for the Nix
+   profile. Excluded from the comparator, along with session-specific
+   `default-shell`/`default-command`/`update-environment`.
+3. zsh: `HIST_FCNTL_LOCK` is added by the history module. zsh-defer and
+   zsh-syntax-highlighting come from store paths. `zsh-completions` is now
+   actually on `fpath`; brew installed it but never added it. Homebrew
+   `PATH`/`fpath` tweaks are removed (gnu-tar, python libexec, rustup,
+   site-functions); Nix's `gnutar` and `python3` (which ships `python`)
+   cover the first two.
+4. gh: blank `editor`/`pager`/`browser`/`http_unix_socket` are left unset;
+   comments are lost.
+5. Claude `settings.json`: the sandbox credential deny path is now
+   `~/.config/age/keys.txt` (was `~/.config/chezmoi/key.txt`), and
+   `~/.config/git` is readable. `allowRead/allowWrite` still name
+   `~/.local/share/chezmoi` (`thom.claude.dotfilesDir`). Change it if the repo
+   moves.
+6. Ghostty: config only on darwin (no Linux desktops). The file is
+   `~/.config/ghostty/config`, not `config.ghostty`.
+7. devbox only updates on `nix flake update thom-container`, not every minute.
+8. zsh-defer files are no longer copied into `~/.zsh/zsh-defer`.
+9. `~/.ssh/config` is generated; the encrypted content is
+   `~/.ssh/config.private`.
 
-| Script | When | What it does | Planned HM mechanism |
-|---|---|---|---|
-| `run_onchange_before_decrypt-private-key.sh.tmpl` | first apply | passphrase-decrypts `key.txt.age` → `~/.config/chezmoi/key.txt` | **stays manual** (interactive passphrase). Documented in §5; key path moves to `~/.config/sops/age/keys.txt` (or keep path, configurable) |
-| `run_onchange_before_install-packages-{darwin,debian,arch,amzn}.sh.tmpl` | on package-list change | sudo distro prereqs (build-essential, curl, git, bubblewrap, socat) + Homebrew + `brew bundle` | brew list → `home.packages` (see §3). **sudo prereqs can't move into HM** — `bubblewrap`/`socat` (for the Claude Code sandbox) come from nixpkgs on Linux instead; build toolchains stay manual |
-| `run_after_generate-ls-colors.sh` | every apply | `vivid generate molokai > ~/.cache/ls_colors` | build-time: `runCommand` with `vivid` → `home.file.".cache/ls_colors".text` — or keep as activation. Pure render is preferable |
-| `run_after_nvim_sync.sh` | every apply | `nvim --headless "+Lazy! sync"` | `home.activation` (after `writeBoundary`, `run` wrapper so `--dry-run` skips it) |
-| `run_onchange_after_setup-thom-container.sh.tmpl` | darwin, on change | `container system start --enable-kernel-install` | `home.activation`, darwin only; `container` is in nixpkgs (`pkgs.container`) |
+## Risks / unverified
 
-### Repo-only (not applied; `.chezmoiignore`)
+- **Nothing has been activated.** No `home-manager switch` was run, and the
+  secrets path was never exercised with the real key (deliberately not
+  decrypted). The first switch is the real test of `decryptSecrets`.
+- **darwin and aarch64-linux are evaluated only, not built.** Spot-checked
+  values: `gls` alias, Docker PATH, SSH SK provider, Ghostty, devbox, senpai
+  symlink, `container`/`gsed`/`gnutar`. Run `./verify.sh` on a Mac.
+- **Apple `container` from nixpkgs** (1.5.0): unknown whether
+  `container system start` works from a store path rather than the official
+  `.pkg` install. Fallback: install the `.pkg` and drop it from
+  `modules/packages.nix` (the activation step finds it on PATH then; adjust
+  `containerSystem` accordingly).
+- **`bootstrap.sh`** passes shellcheck and nix-user-chroot was confirmed to
+  work on this box. The full Nix install inside it and the switch were not
+  run.
+- `gh config set …` and `gpg`'s own config edits now fail (read-only store
+  files). Change those through Nix instead.
 
-`CLAUDE.md`, `.claude/MEMORY.md`, `.claude/feedback_chezmoi_template_verification.md`,
-`.claude/worktrees/**`, `key.txt.age`, `.config/nvim/lazy-lock.json`, `.config/nvim/lazyvim.json`.
-`.chezmoi.toml.tmpl` / `.chezmoidata.toml` / `.chezmoitemplates/*` are chezmoi
-machinery and go away with it.
+## Cut-over (manual)
 
-## 2. Template variables and divergence points
+On each existing chezmoi machine:
 
-| Variable | Used in | Divergence |
-|---|---|---|
-| `.chezmoi.os` | zshenv, zprofile, zshrc (`gls` vs `ls`), settings.json (Keychains deny, tmp dir), install scripts, setup-thom-container, `.chezmoiignore` | darwin vs linux → `pkgs.stdenv.isDarwin` |
-| `.chezmoi.arch` | gitconfig (`/opt/homebrew/bin/gh` vs `/usr/local/bin/gh`) | disappears: use `${pkgs.gh}` |
-| `.chezmoi.osRelease.{id,idLike,versionID}` | install-packages-{debian,arch,amzn} | distro → not modelled in HM (sudo prereqs manual) |
-| `.chezmoi.pathSeparator` | zshrc **comment only** (`parameter/command substitution`) | render literal `/` |
-| `.chezmoi.args`, `.chezmoi.executable`, `.chezmoi.sourceDir` | decrypt-private-key | gone (manual step) |
-| `.claude.default_mode` (`"auto"`) | settings.json | module option `thom.claude.defaultMode` |
-| `.packages.brew`, `.packages.brew_darwin_extra` | brew-install | `home.packages` (+ darwin extras) |
-| `.cpu.cores`, `.cpu.threads` | **nowhere** | dead data; dropped |
-| `env "container"`, `stat /.dockerenv` etc. | settings.json | runtime container detection (Q5) |
+1. `git -C ~/.local/share/chezmoi switch hm-migration` (or merge it first).
+2. `~/.local/share/chezmoi/bootstrap.sh <role>`. This reuses
+   `~/.config/chezmoi/key.txt` as `~/.config/age/keys.txt`, installs Nix if
+   needed, and runs `home-manager switch -b hm-bak`. Files chezmoi wrote that
+   HM now owns are kept as `*.hm-bak`. `activation.retireChezmoiFiles` moves
+   `~/.gitconfig`, `~/.tmux.conf` and `~/.config/ghostty/config.ghostty`
+   aside (they would shadow or duplicate the new config).
+3. Check a new shell, `git config -l --show-origin`, `ssh -G <host>`, tmux.
+4. `chezmoi purge` (removes chezmoi's config/state/cache and source dir).
+   **Move the repo out of `~/.local/share/chezmoi` first** if you want to keep
+   the checkout, and update `thom.claude.dotfilesDir`. Afterwards delete the
+   leftovers HM doesn't manage: `~/.gitignore`, `~/.gitattributes`,
+   `~/.zsh/zsh-defer/`, `~/.config/chezmoi/` (after confirming
+   `~/.config/age/keys.txt`).
+5. Brew: `brew bundle dump` to check for anything not in
+   `modules/packages.nix`, then uninstall Homebrew if desired.
+6. Optionally make Nix's zsh the login shell (`/etc/shells` + `chsh`).
 
-**Nothing branches on hostname.** The real axes are: OS (darwin/linux), arch,
-Linux distro (install scripts only), and "inside a container".
+Fresh machines: clone the repo anywhere, run `./bootstrap.sh [role]`.
 
-## 3. Package mapping (`.chezmoidata.toml`)
-
-| brew | nixpkgs | note |
-|---|---|---|
-| bat, dust, gh, git, git-delta (`delta`), jq, neovim, ripgrep, starship, tmux, uv, vivid, wget, xz, zstd | same names (`delta` for git-delta) | several become `programs.*` |
-| python | `python3` | zprofile adds `/opt/homebrew/opt/python/libexec/bin` (unversioned `python`) on darwin — needs replacement |
-| zsh | `programs.zsh` | login shell change is manual (`chsh`; not possible without root on chroot hosts) |
-| zsh-completions | `pkgs.zsh-completions` | |
-| zsh-syntax-highlighting | `programs.zsh.syntaxHighlighting` **not used** (it loads eagerly); source `${pkgs.zsh-syntax-highlighting}/share/…` via `zsh-defer` instead |
-| darwin: container, gnu-sed, gnu-tar | `container`, `gnused`, `gnutar` | `gls` alias needs `coreutils` (brew coreutils isn't in the list today — `gls` currently relies on it being installed some other way) |
-
-Homebrew itself: drop on Linux. On darwin keep brew for casks/GUI apps? (Q3)
-
-## 4. Known risks / expected verify.sh mismatches
-
-1. **PQ age key vs sops.** The recipient is `age1pq1…` (post-quantum hybrid,
-   age ≥ 1.3). nixpkgs has `age` 1.3.2 (supports it) but `sops` 3.13.3 — I could
-   not confirm its vendored `filippo.io/age` handles `age1pq` recipients
-   (inspecting the source was blocked). If it doesn't, alternatives:
-   **agenix** (shells out to the `age` binary → PQ works), or a small
-   `home.activation` step running `age -d -i <key>`. Needs a decision (Q2).
-2. **Can't build darwin here.** This box is x86_64-linux with no darwin
-   builder; `aarch64-darwin` configs can only be *evaluated*
-   (`nix eval …activationPackage.drvPath`). Likewise `chezmoi cat` only renders
-   for the current OS, so darwin verification = eval + manual inspection.
-3. **verify.sh must never `chezmoi cat` encrypted targets** (that decrypts).
-   Use `chezmoi managed --include=files --exclude=encrypted` for the file list;
-   encrypted targets: path presence only.
-4. **`modify_` targets** (`.claude.json`, `settings.json`) aren't in
-   `result/home-files`. verify.sh instead runs the generated activation jq
-   filter on `{}` and diffs against `chezmoi cat` (which runs the modify script
-   on the current file — so compare with `echo '{}' | …` on both sides).
-5. **Module-generated files will differ textually**: `.zshrc`/`.zshenv`
-   (HM wrapper lines), `.gitconfig` (HM writes `~/.config/git/config` in its
-   own INI layout — compare semantically via sorted `git config -f … --list`),
-   `.tmux.conf` (HM prepends its own defaults; all will be pinned to current
-   values), `gh/config.yml` (YAML re-serialised, comments lost),
-   `gpg.conf` if moved to `programs.gpg`.
-6. **zshrc semantic changes**: zsh-syntax-highlighting path switches from
-   `$HOMEBREW_PREFIX/share/…` / `/usr/share/zsh/plugins/…` to a store path;
-   `zsh-defer` loaded from store not `~/.zsh/zsh-defer`; `gls` from
-   nix `coreutils`.
-7. **Brief vs reality.** The task brief mentions "the custom compinit with
-   glob qualifiers" and TPM plugins. Neither exists in the current source: the
-   zshrc calls a plain `compinit` at the end, and every tmux plugin line is
-   commented out. I'll reproduce what's actually there (plain `compinit`, no
-   plugins) unless you want those added (Q8).
-8. **devbox** loses the 1-minute auto-refresh (pinned flake input).
-
-## 5. Left manual (will grow)
-
-- Decrypt the age identity (`age -d key.txt.age > ~/.config/sops/age/keys.txt`,
-  chmod 600) — interactive passphrase.
-- Re-encrypt the five `encrypted_*` files into the chosen secrets format (TODO for Thom).
-- Distro prerequisites needing sudo (build-essential/base-devel, Development Tools).
-- `chsh` to the Nix zsh (root hosts only).
-- First activation: `home-manager switch -b hm-bak --flake .#<cfg>`.
-- After cut-over: `chezmoi purge`.
-
-## 6. Open questions (blocking Step 2 / 6)
-
-1. **Hosts.** No hostnames appear in chezmoi data. What should the
-   `homeConfigurations` be? Proposal, keyed by role rather than hostname:
-   `thom@darwin` (aarch64-darwin), `thom@linux` (x86_64-linux, this box
-   `development`), `thom@linux-arm` (aarch64-linux, e.g. devbox containers on
-   Apple Silicon), `thom@chroot` (x86_64-linux, nix-user-chroot). Or give me
-   real hostnames.
-2. **Secrets tool**: sops-nix as briefed (risk: PQ recipient support), or agenix?
-3. **Homebrew on darwin**: drop entirely, or keep for casks/GUI apps (Ghostty
-   etc.) outside HM?
-4. **`.ssh/config`**: it's encrypted, and converting to `programs.ssh` requires
-   reading the plaintext. Keep it as an opaque secret file (my proposal), or
-   will you decrypt it yourself so I can port it?
-5. **Claude settings container detection**: keep runtime detection inside the
-   activation script (my proposal, matches current behaviour), or make it a
-   per-host option?
-6. **ghostty on Linux**: install `pkgs.ghostty` on Linux hosts, or config only
-   (`package = null` everywhere — e.g. this box is headless)?
-7. **starship**: port `starship.toml` to `programs.starship.settings`, or keep it
-   as a verbatim file (byte-identical verify)?
-8. Confirm: reproduce the current plain `compinit` and no tmux plugins (vs the
-   brief's glob-qualifier compinit / `pkgs.tmuxPlugins`)?
-9. **nix-user-chroot**: HM's `~/.zshrc` etc. are symlinks into `/nix/store`,
-   which only resolves *inside* the chroot namespace. Outside it they dangle,
-   so the host's login shell must not be zsh-with-HM-dotfiles. Plan: on
-   `thom@chroot`, ship nothing at the login entry point and document a
-   non-Nix shim (e.g. `~/.bash_profile`: `exec nix-user-chroot ~/.nix
-   ~/.nix-profile/bin/zsh -l`) that you install by hand. How do you enter the
-   chroot today — and is `~/.nix` the store root? HM also needs
-   `targets.genericLinux.enable = true` on non-NixOS Linux.
+Once every machine is switched, the chezmoi sources (`dot_*`, `private_*`,
+`exact_*`, `run_*`, `modify_*`, `.chezmoi*`, `key.txt.age` excepted) can be
+deleted. Not done here; that's your call.
