@@ -13,7 +13,7 @@ gained entries hiding the new files). Nothing has been deleted.
 
 | Path | What |
 |---|---|
-| `flake.nix` | nixpkgs (unstable) + home-manager (follows nixpkgs) + `thom-container` (devbox). `homeConfigurations."thom@<role>"`, `checks`, `packages.home-manager` (pinned CLI) |
+| `flake.nix` | nixpkgs (unstable) + home-manager (follows nixpkgs) + `thom-container` (devbox). `homeConfigurations."<user>@<role>"` for `thom` and `thomwiggers`, `checks`, `packages.home-manager` (pinned CLI) |
 | `home.nix` | shared entry point; imports `modules/*` |
 | `hosts/<role>.nix` | per-role differences (`thom.container`, genericLinux) |
 | `modules/options.nix` | `thom.container`, `thom.claude.defaultMode` |
@@ -38,10 +38,10 @@ and "inside a container". Configurations are therefore per role:
 
 | Config | System | `thom.container` | Notes |
 |---|---|---|---|
-| `thom@darwin` | aarch64-darwin | false | Macs |
-| `thom@linux` | x86_64-linux | true | e.g. `development` (Incus/LXC) |
-| `thom@linux-arm` | aarch64-linux | true | devbox under Apple's container |
-| `thom@chroot` | x86_64-linux | false | no root; Nix in `~/.nix` via nix-user-chroot |
+| `<user>@darwin` | aarch64-darwin | false | Macs |
+| `<user>@linux` | x86_64-linux | true | e.g. `development` (Incus/LXC) |
+| `<user>@linux-arm` | aarch64-linux | true | devbox under Apple's container |
+| `<user>@chroot` | x86_64-linux | false | no root; Nix in `~/.nix` via nix-user-chroot |
 
 `thom.container` replaces chezmoi's runtime detection (`$container`,
 `/.dockerenv`, `/run/.containerenv`, `/run/systemd/container`) and only feeds
@@ -177,10 +177,18 @@ Known, explained differences (all deliberate):
 
 ## Risks / unverified
 
-- **User/home are fixed** (`thom`, `/home/thom` or `/Users/thom`). Home
-  Manager refuses to activate for another account; `bootstrap.sh` checks this
-  up front. Shared no-root hosts with a different username need a role with
-  its own `home.username`/`home.homeDirectory`.
+- **Accounts**: every role exists for `thom` and `thomwiggers`
+  (`users` in `flake.nix`), with home `/home/<user>` or `/Users/<user>`.
+  Home Manager refuses to activate otherwise; `bootstrap.sh` picks
+  `$(id -un)@<role>` and checks this up front. A host with a non-standard
+  home directory needs a tweak to `mkHome`.
+- **Nix inside Claude Code's sandbox** (also changed in the chezmoi
+  template): the nix-daemon socket is allowed (only that path on macOS; on
+  Linux the seccomp filter is all-or-nothing, so `allowAllUnixSockets`
+  opens every Unix socket, e.g. a Docker socket if present), plus writes to
+  `~/.cache/nix` and `/nix` (effective only for single-user installs). Not
+  yet exercised: fetching through the sandbox's TLS-terminating proxy may
+  need its CA in `NIX_SSL_CERT_FILE`.
 - **Nothing has been activated.** No `home-manager switch` was run, and the
   secrets path was never exercised with the real key (deliberately not
   decrypted). The first switch is the real test of `decryptSecrets`.
