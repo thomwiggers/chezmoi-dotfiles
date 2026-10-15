@@ -74,6 +74,12 @@
         )
       );
 
+      # Pinned Home Manager CLI, used by bootstrap.sh.
+      packages = forAllSystems (system: {
+        home-manager = home-manager.packages.${system}.home-manager;
+        default = home-manager.packages.${system}.home-manager;
+      });
+
       formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt);
     };
 }

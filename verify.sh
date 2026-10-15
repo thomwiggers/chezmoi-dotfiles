@@ -18,7 +18,7 @@ Darwin) default_role=darwin ;;
 esac
 role=${1:-$default_role}
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" || exit 1
 export NIX_CONFIG="experimental-features = nix-command flakes"
 hm=".#homeConfigurations.\"thom@$role\""
 
@@ -194,7 +194,7 @@ check() {
 		else
 			src=dot_claude/modify_private_settings.json.tmpl filter=settingsMerge
 		fi
-		chezmoi execute-template <"$src" >"$work/cz.sh"
+		chezmoi --source "$PWD" execute-template <"$src" >"$work/cz.sh"
 		echo '{}' | bash "$work/cz.sh" |
 			"$bin/jq" -S '
 				(.sandbox.credentials.files[]? | select(.path == "~/.config/chezmoi/key.txt") | .path) |= "~/.config/age/keys.txt"
