@@ -10,6 +10,7 @@
     ./modules/files.nix
     ./modules/zsh.nix
     ./modules/git.nix
+    ./modules/tmux.nix
   ];
 
   home.username = "thom";
