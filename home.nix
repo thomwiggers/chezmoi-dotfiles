@@ -8,6 +8,7 @@
   imports = [
     ./modules/options.nix
     ./modules/files.nix
+    ./modules/zsh.nix
   ];
 
   home.username = "thom";
