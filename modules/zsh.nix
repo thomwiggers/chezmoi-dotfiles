@@ -113,28 +113,17 @@ in
       cat = "bat";
     };
 
-    # Rebuild the completion dump at most once a day; otherwise skip the
-    # compaudit security scan with -C. The anonymous function's arguments
-    # are globbed with bare qualifiers, so this works without EXTENDED_GLOB
-    # (setOptions runs later, at mkOrder 950).
+    # The module's completionInit slot (mkOrder 570) is too early:
+    # key-bindings.zsh runs `bindkey -e`, which would drop the widgets
+    # compinit binds. As in the old .zshrc, compinit runs last (mkOrder 1450).
     enableCompletion = true;
-    completionInit = ''
-      autoload -Uz compinit
-      () {
-          if (( $# )); then
-              compinit
-          else
-              compinit -C
-          fi
-      } ''${ZDOTDIR:-$HOME}/.zcompdump(N.mh+24)
-    '';
+    completionInit = "";
 
     initContent = lib.mkMerge [
       (lib.mkOrder 500 ''
         zmodload zsh/zprof
       '')
 
-      # Must precede completionInit (570).
       (lib.mkOrder 550 ''
         fpath=(
             "${pkgs.zsh-defer}/share/zsh-defer"
@@ -145,6 +134,7 @@ in
 
         source "$HOME/.zsh/functions.sh"
 
+        autoload -Uz compinit
         zstyle ':completion:*' menu select
       '')
 
@@ -160,6 +150,20 @@ in
         if [ -n "$GHOSTTY_RESOURCES_DIR" ]; then
             source "''${GHOSTTY_RESOURCES_DIR}/shell-integration/zsh/ghostty-integration"
         fi
+      '')
+
+      # Rebuild the completion dump at most once a day; otherwise skip the
+      # compaudit security scan with -C. The anonymous function's arguments
+      # are globbed with bare qualifiers (no EXTENDED_GLOB needed).
+      (lib.mkOrder 1450 ''
+        # Initialize completion
+        () {
+            if (( $# )); then
+                compinit
+            else
+                compinit -C
+            fi
+        } ''${ZDOTDIR:-$HOME}/.zcompdump(N.mh+24)
       '')
 
       (lib.mkOrder 1500 ''
