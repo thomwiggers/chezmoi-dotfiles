@@ -11,6 +11,8 @@
     ./modules/zsh.nix
     ./modules/git.nix
     ./modules/tmux.nix
+    ./modules/secrets.nix
+    ./modules/secret-files.nix
   ];
 
   home.username = "thom";
