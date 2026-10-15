@@ -9,3 +9,14 @@ CLAUDE.md
 key.txt.age
 .config/nvim/lazy-lock.json
 .config/nvim/lazyvim.json
+# Home Manager migration (hm-migration branch)
+flake.nix
+flake.lock
+home.nix
+hosts/**
+modules/**
+files/**
+secrets/**
+MIGRATION.md
+verify.sh
+bootstrap.sh
