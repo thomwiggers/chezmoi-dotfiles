@@ -69,6 +69,9 @@ defaults='{
       ]
     },
     "network": {
+      {{- /* Nix client -> nix-daemon socket. Linux's seccomp filter can't
+             allow a single socket path. */}}
+      {{ if eq .chezmoi.os "darwin" }}"allowUnixSockets": ["/nix/var/nix/daemon-socket/socket"]{{ else }}"allowAllUnixSockets": true{{ end }},
       "tlsTerminate": {},
       "allowedDomains": ["*", "api.github.com", "github.com", "uploads.github.com"]
     },
@@ -80,7 +83,9 @@ defaults='{
         "~/.local/share/chezmoi"
       ],
       "allowWrite": [
-        "~/.local/share/chezmoi"
+        "~/.local/share/chezmoi",
+        "~/.cache/nix",
+        "/nix"
       ]
     }
   },

@@ -34,6 +34,17 @@ let
     '
   '';
 
+  # Nix: the client talks to nix-daemon over its Unix socket. macOS can allow
+  # just that socket; on Linux the seccomp filter is all-or-nothing, so every
+  # Unix socket is opened. ~/.cache/nix holds the eval/fetcher caches; /nix
+  # is only writable for single-user installs (nix-user-chroot, containers),
+  # where Unix permissions don't already stop it.
+  nixSocket =
+    if isDarwin then
+      ''"allowUnixSockets": ["/nix/var/nix/daemon-socket/socket"],''
+    else
+      ''"allowAllUnixSockets": true,'';
+
   # bubblewrap can't mount a fresh /proc inside unprivileged containers
   # (lxcfs overmounts it under LXC/Incus; Docker and Podman mask parts of
   # it), so reuse the container's /proc there. Set per host (thom.container).
@@ -103,6 +114,7 @@ let
           ]
         },
         "network": {
+          ${nixSocket}
           "tlsTerminate": {},
           "allowedDomains": ["*", "api.github.com", "github.com", "uploads.github.com"]
         },
@@ -115,7 +127,9 @@ let
             ${builtins.toJSON cfg.dotfilesDir}
           ],
           "allowWrite": [
-            ${builtins.toJSON cfg.dotfilesDir}
+            ${builtins.toJSON cfg.dotfilesDir},
+            "~/.cache/nix",
+            "/nix"
           ]
         }
       },
