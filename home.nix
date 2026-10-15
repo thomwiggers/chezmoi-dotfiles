@@ -5,7 +5,10 @@
   ...
 }:
 {
-  imports = [ ./modules/options.nix ];
+  imports = [
+    ./modules/options.nix
+    ./modules/files.nix
+  ];
 
   home.username = "thom";
   home.homeDirectory = if pkgs.stdenv.isDarwin then "/Users/thom" else "/home/thom";

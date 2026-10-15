@@ -1,0 +1,5 @@
+#compdef package
+
+_arguments \
+    '(-o)-o[output file]:output file:_files' \
+    '*:input files:_files'
