@@ -31,7 +31,9 @@
   };
 
   # senpai on macOS looks in ~/Library/Application Support.
-  home.file."Library/Application Support/senpai/senpai.scfg" = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
-    source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/senpai/senpai.scfg";
-  };
+  home.file."Library/Application Support/senpai/senpai.scfg" =
+    lib.mkIf pkgs.stdenv.hostPlatform.isDarwin
+      {
+        source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/senpai/senpai.scfg";
+      };
 }

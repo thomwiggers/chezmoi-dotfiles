@@ -69,9 +69,9 @@
       # `nix flake check` builds every role native to the checking machine.
       checks = forAllSystems (
         system:
-        nixpkgs.lib.mapAttrs' (name: role: nixpkgs.lib.nameValuePair "home-${name}" (mkHome role).activationPackage) (
-          nixpkgs.lib.filterAttrs (_: role: role.system == system) roles
-        )
+        nixpkgs.lib.mapAttrs' (
+          name: role: nixpkgs.lib.nameValuePair "home-${name}" (mkHome role).activationPackage
+        ) (nixpkgs.lib.filterAttrs (_: role: role.system == system) roles)
       );
 
       # Pinned Home Manager CLI, used by bootstrap.sh.
@@ -80,6 +80,6 @@
         default = home-manager.packages.${system}.home-manager;
       });
 
-      formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt);
+      formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-tree);
     };
 }

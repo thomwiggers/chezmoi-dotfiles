@@ -74,9 +74,12 @@ let
           "files": [
             { "path": "~/.ssh", "mode": "deny" },
             { "path": "~/.gnupg", "mode": "deny" },
-            { "path": ${builtins.toJSON (lib.replaceStrings [ config.home.homeDirectory ] [ "~" ] config.thom.age.identity)}, "mode": "deny" },
-            { "path": "~/.config/gh/hosts.yml", "mode": "deny" }${lib.optionalString isDarwin '',
-            { "path": "~/Library/Keychains", "mode": "deny" }''}
+            { "path": ${
+              builtins.toJSON (lib.replaceStrings [ config.home.homeDirectory ] [ "~" ] config.thom.age.identity)
+            }, "mode": "deny" },
+            { "path": "~/.config/gh/hosts.yml", "mode": "deny" }${lib.optionalString isDarwin ''
+              ,
+                          { "path": "~/Library/Keychains", "mode": "deny" }''}
           ],
           "envVars": [
             { "name": "GH_TOKEN", "mode": "mask", "injectHosts": ["api.github.com", "github.com", "uploads.github.com"] },
