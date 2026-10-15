@@ -16,6 +16,7 @@
     ./modules/ssh.nix
     ./modules/claude.nix
     ./modules/packages.nix
+    ./modules/ghostty.nix
   ];
 
   home.username = "thom";
