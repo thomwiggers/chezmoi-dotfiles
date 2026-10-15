@@ -14,6 +14,7 @@
     ./modules/secrets.nix
     ./modules/secret-files.nix
     ./modules/ssh.nix
+    ./modules/claude.nix
   ];
 
   home.username = "thom";
