@@ -1,8 +1,10 @@
 # chezmoi → Home Manager migration
 
 Status: **implemented on branch `hm-migration`; not yet activated anywhere.**
-`nix flake check` passes, every role evaluates, the x86_64-linux roles build,
-and `./verify.sh` reports `ok=33 explained=13 mismatch=0` on this machine.
+`nix flake check` passes, every role evaluates, the x86_64-linux roles
+(`linux`, `chroot`) build with `home-manager build`, and `./verify.sh linux`
+and `./verify.sh chroot` both report `ok=38 explained=13 mismatch=0` on this
+machine.
 
 The chezmoi sources are still in the repo, untouched (only `.chezmoiignore`
 gained entries hiding the new files). Nothing has been deleted.
@@ -107,8 +109,8 @@ distro packages); `.claude.default_mode` → `thom.claude.defaultMode`;
   `programs.ssh.matchBlocks` when convenient.
 - **Homebrew dropped** everywhere. Apple's `container` comes from nixpkgs.
   GUI apps (Ghostty) are installed outside Nix.
-- **compinit** now rebuilds `.zcompdump` at most daily (`compinit -C`
-  otherwise). It still runs last, as before. The module's slot (570) was
+- **compinit** now does its full check at most daily (`compinit -C`
+  otherwise; the dump's mtime is bumped after a full run). It still runs last, as before. The module's slot (570) was
   tried and broke completion key bindings, because `key-bindings.zsh` runs
   `bindkey -e` afterwards.
 - **tmux**: no plugins (all were commented out). Every option the module
@@ -140,7 +142,7 @@ reformats:
 | `gpg.conf` | option lines, comments stripped, sorted |
 | `.zshrc` (+ `.zshenv`, `.zprofile`) | interactive login zsh in scratch HOMEs: `setopt`, `alias`, `bindkey`, `zstyle -L`, function names |
 | `.claude.json`, `settings.json` | both jq merges applied to `{}` |
-| encrypted | path only (never rendered) |
+| encrypted | path only (never rendered), plus a byte compare of `secrets/*.age` against the chezmoi `encrypted_*` sources so copies can't go stale |
 
 Known, explained differences (all deliberate):
 
@@ -159,9 +161,11 @@ Known, explained differences (all deliberate):
    cover the first two.
 4. gh: blank `editor`/`pager`/`browser`/`http_unix_socket` are left unset;
    comments are lost.
-5. Claude `settings.json`: the sandbox credential deny path is now
-   `~/.config/age/keys.txt` (was `~/.config/chezmoi/key.txt`), and
-   `~/.config/git` is readable. `allowRead/allowWrite` still name
+5. Claude `settings.json`: the sandbox denies `~/.config/age/keys.txt` in
+   addition to `~/.config/chezmoi/key.txt` (bootstrap copies the key, so the
+   old file lingers until purged), `~/.config/git` is readable, and
+   `enableWeakerNestedSandbox` follows the role's `thom.container` instead
+   of runtime detection (verify.sh normalises it to the role's value). `allowRead/allowWrite` still name
    `~/.local/share/chezmoi` (`thom.claude.dotfilesDir`). Change it if the repo
    moves.
 6. Ghostty: config only on darwin (no Linux desktops). The file is
@@ -173,6 +177,10 @@ Known, explained differences (all deliberate):
 
 ## Risks / unverified
 
+- **User/home are fixed** (`thom`, `/home/thom` or `/Users/thom`). Home
+  Manager refuses to activate for another account; `bootstrap.sh` checks this
+  up front. Shared no-root hosts with a different username need a role with
+  its own `home.username`/`home.homeDirectory`.
 - **Nothing has been activated.** No `home-manager switch` was run, and the
   secrets path was never exercised with the real key (deliberately not
   decrypted). The first switch is the real test of `decryptSecrets`.
@@ -194,7 +202,10 @@ Known, explained differences (all deliberate):
 
 On each existing chezmoi machine:
 
-1. `git -C ~/.local/share/chezmoi switch hm-migration` (or merge it first).
+1. Get the branch into the checkout: merge `hm-migration` into `main`, or
+   remove the review worktree first (`git worktree remove
+   .claude/worktrees/hm-migration`) and then `git switch hm-migration` — git
+   won't switch to a branch another worktree has checked out.
 2. `~/.local/share/chezmoi/bootstrap.sh <role>`. This reuses
    `~/.config/chezmoi/key.txt` as `~/.config/age/keys.txt`, installs Nix if
    needed, and runs `home-manager switch -b hm-bak`. Files chezmoi wrote that
@@ -212,7 +223,9 @@ On each existing chezmoi machine:
    `modules/packages.nix`, then uninstall Homebrew if desired.
 6. Optionally make Nix's zsh the login shell (`/etc/shells` + `chsh`).
 
-Fresh machines: clone the repo anywhere, run `./bootstrap.sh [role]`.
+Fresh machines: clone the repo (to `~/.local/share/chezmoi` until
+`thom.claude.dotfilesDir` is changed, or Claude Code's sandbox won't allow
+writes to it) and run `./bootstrap.sh [role]`.
 
 Once every machine is switched, the chezmoi sources (`dot_*`, `private_*`,
 `exact_*`, `run_*`, `modify_*`, `.chezmoi*`, `key.txt.age` excepted) can be
