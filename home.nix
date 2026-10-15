@@ -13,6 +13,7 @@
     ./modules/tmux.nix
     ./modules/secrets.nix
     ./modules/secret-files.nix
+    ./modules/ssh.nix
   ];
 
   home.username = "thom";
