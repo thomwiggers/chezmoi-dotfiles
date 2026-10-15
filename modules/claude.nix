@@ -37,6 +37,8 @@ let
   # bubblewrap can't mount a fresh /proc inside unprivileged containers
   # (lxcfs overmounts it under LXC/Incus; Docker and Podman mask parts of
   # it), so reuse the container's /proc there. Set per host (thom.container).
+  # The chezmoi-era key path stays denied: bootstrap.sh copies the identity
+  # from there, and the old copy lingers until chezmoi is purged.
   settingsMerge = pkgs.writeShellScript "claude-settings-merge" ''
     set -euo pipefail
 
@@ -74,6 +76,7 @@ let
           "files": [
             { "path": "~/.ssh", "mode": "deny" },
             { "path": "~/.gnupg", "mode": "deny" },
+            { "path": "~/.config/chezmoi/key.txt", "mode": "deny" },
             { "path": ${
               builtins.toJSON (lib.replaceStrings [ config.home.homeDirectory ] [ "~" ] config.thom.age.identity)
             }, "mode": "deny" },

@@ -159,7 +159,9 @@ in
         # Initialize completion
         () {
             if (( $# )); then
-                compinit
+                # compinit leaves an unchanged dump alone; bump its mtime so
+                # the full check runs once a day, not on every start.
+                compinit && touch ''${ZDOTDIR:-$HOME}/.zcompdump
             else
                 compinit -C
             fi

@@ -25,7 +25,11 @@ in
   home.activation = {
     # run_after_nvim_sync.sh: sync lazy.nvim plugins quietly; show the
     # output only if something went wrong.
-    nvimLazySync = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    # Needs init.lua linked and git/neovim in the profile.
+    nvimLazySync = lib.hm.dag.entryAfter [
+      "linkGeneration"
+      "installPackages"
+    ] ''
       if [[ ! -v DRY_RUN ]]; then
         log="${config.xdg.cacheHome}/nvim-lazy-sync.log"
         mkdir -p "$(dirname "$log")"

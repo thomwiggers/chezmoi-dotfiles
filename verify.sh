@@ -28,6 +28,7 @@ trap 'rm -rf "$work"' EXIT
 echo "building thom@$role ..." >&2
 nix build -o "$work/result" "$hm.activationPackage" || exit 1
 hf="$work/result/home-files"
+container=$(nix eval "$hm.config.thom.container")
 bin="$work/result/home-path/bin"
 
 ok=0 explained=0 mismatch=0
@@ -110,7 +111,7 @@ PROBE
 		grep -vx histfcntllock
 }
 
-toml_json() { python3 -c 'import json,sys,tomllib; print(json.dumps(tomllib.load(open(sys.argv[1],"rb")),sort_keys=True,indent=1))' "$1"; }
+toml_json() { "$bin/python3" -c 'import json,sys,tomllib; print(json.dumps(tomllib.load(open(sys.argv[1],"rb")),sort_keys=True,indent=1))' "$1"; }
 # Blank and null gh settings both mean "use the default".
 yaml_json() { nix run --inputs-from . nixpkgs#yq-go -- -o json -P 'del(.[] | select(. == null or . == "")) | sort_keys(..)' "$1"; }
 gpg_norm() { grep -vE '^\s*(#|$)' "$1" | sed -E 's/[[:space:]]+/ /g' | sort; }
@@ -195,15 +196,21 @@ check() {
 			src=dot_claude/modify_private_settings.json.tmpl filter=settingsMerge
 		fi
 		chezmoi --source "$PWD" execute-template <"$src" >"$work/cz.sh"
+		# shellcheck disable=SC2016 # jq variables
 		echo '{}' | bash "$work/cz.sh" |
-			"$bin/jq" -S '
-				(.sandbox.credentials.files[]? | select(.path == "~/.config/chezmoi/key.txt") | .path) |= "~/.config/age/keys.txt"
+			"$bin/jq" -S --argjson c "$container" '
+				if .sandbox then
+					# HM denies both the chezmoi-era and the new identity path.
+					.sandbox.credentials.files |= (.[0:3] + [{path: "~/.config/age/keys.txt", mode: "deny"}] + .[3:])
+					# chezmoi detected containers at runtime; HM sets it per role.
+					| .sandbox.enableWeakerNestedSandbox = $c
+				else . end
 			' >"$work/a"
 		echo '{}' | "$(nix build --no-link --print-out-paths "$hm.config.thom.claude.$filter")" |
 			"$bin/jq" -S '
 				if .sandbox.filesystem.allowRead then .sandbox.filesystem.allowRead -= ["~/.config/git"] else . end
 			' >"$work/b"
-		compare "$p (jq merge on {}; age key path + ~/.config/git read normalised)" "$work/a" "$work/b"
+		compare "$p (jq merge on {}; age key path, ~/.config/git read, container flag normalised)" "$work/a" "$work/b"
 		;;
 	*)
 		if [[ ! -e $h ]]; then
@@ -238,6 +245,21 @@ while IFS= read -r p; do
 		MISMATCH "$p" "no thom.age.secrets entry"
 	fi
 done < <(chezmoi --source "$PWD" managed --include=encrypted --exclude=dirs)
+
+echo "== ciphertexts (byte compare with the chezmoi sources; nothing decrypted)"
+while IFS='|' read -r new old; do
+	if cmp -s "secrets/$new" "$old"; then
+		OK "secrets/$new"
+	else
+		MISMATCH "secrets/$new" "differs from $old; re-copy it"
+	fi
+done <<'LIST'
+ssh_config.age|private_dot_ssh/encrypted_config.age
+halloy_config.toml.age|dot_config/exact_halloy/encrypted_config.toml.age
+halloy_theme_catppucin_light.toml.age|dot_config/exact_halloy/exact_private_themes/encrypted_catppucin light.toml.age
+senpai.scfg.age|dot_config/exact_senpai/encrypted_private_senpai.scfg.age
+runitor_hc_key.age|dot_config/runitor/encrypted_hc_key.age
+LIST
 
 echo
 echo "ok=$ok explained=$explained mismatch=$mismatch"

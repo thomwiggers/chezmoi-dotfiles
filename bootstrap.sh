@@ -46,6 +46,13 @@ darwin | linux | linux-arm | chroot) ;;
 esac
 [[ $role == chroot && $os != Linux ]] && die "the chroot role is Linux-only"
 
+# home.username/homeDirectory are fixed in home.nix; Home Manager refuses
+# to activate for another account.
+want_home=/home/thom
+[[ $os == Darwin ]] && want_home=/Users/thom
+[[ $(id -un) == thom && $HOME == "$want_home" ]] ||
+	die "this configuration is for user thom with HOME=$want_home (got $(id -un), $HOME); adjust home.nix"
+
 need curl
 [[ $os == Linux ]] && need xz "the Nix installer tarball is xz-compressed"
 
@@ -148,6 +155,10 @@ if [[ $role == chroot ]]; then
 	marker="# nix-user-chroot (dotfiles bootstrap.sh)"
 	if ! grep -qF "$marker" "$HOME/.bash_profile" 2>/dev/null; then
 		say "Adding the nix-user-chroot hand-off to ~/.bash_profile"
+		if [[ ! -e $HOME/.bash_profile ]]; then
+			# A new ~/.bash_profile stops bash from reading ~/.profile.
+			echo '[ -f ~/.profile ] && . ~/.profile' >"$HOME/.bash_profile"
+		fi
 		cat >>"$HOME/.bash_profile" <<EOF
 
 $marker
