@@ -5,8 +5,9 @@
 # is public and the store is world-readable, so keep it that way.
 #
 # Rendered order: global options, `Include config.private` (its Host blocks
-# set nothing the blocks below do), then the blocks below in this order.
-# ssh takes the first value it sees, so order matters.
+# set nothing the blocks below do), the specific blocks, then `Host *` last
+# (Home Manager always writes the "*" block last). ssh takes the first value
+# it sees, so specific blocks must come before the defaults.
 { lib, ... }:
 {
   programs.ssh = {
@@ -25,10 +26,7 @@
     };
 
     settings = {
-      # Not the "*" attribute: Home Manager always writes that one last, which
-      # would let the blocks below override it. The old config had it first.
-      all = lib.hm.dag.entryAnywhere {
-        header = "Host *";
+      "*" = {
         AddKeysToAgent = "yes";
         ControlMaster = "auto";
         ControlPersist = "yes";
@@ -37,16 +35,15 @@
         ServerAliveInterval = 20;
       };
 
-      # As in the old config this comes after `Host *`, so both values are
-      # already set by then and this block has no effect.
-      "github.com" = lib.hm.dag.entryAfter [ "all" ] {
+      # No connection sharing for GitHub.
+      "github.com" = {
         ControlPersist = "no";
         ControlMaster = "no";
       };
 
       # Ephemeral VMs reuse names with different host keys; network is the
       # trust boundary.
-      ephemeral = lib.hm.dag.entryAfter [ "github.com" ] {
+      ephemeral = {
         header = "Host *.ide-nessie.ts.net *.incus";
         StrictHostKeyChecking = "no";
         UserKnownHostsFile = "/dev/null";

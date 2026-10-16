@@ -111,9 +111,11 @@ distro packages); `.claude.default_mode` → `thom.claude.defaultMode`;
   Host blocks with addresses, ports and users (pqsh bastion/gitlab, cocytus,
   eprint) are re-encrypted alone in `secrets/ssh_config_private.age` and
   `Include`d. `ssh -G` for every host, with canonicalisation on and off,
-  matched the original config exactly. Block order is kept: the old
-  `Host github.com` block comes after `Host *` and so has no effect (ssh
-  takes the first value); preserved, not fixed.
+  matched the original config exactly, except for one deliberate fix: the
+  old `Host github.com` block came after `Host *` and so never took effect
+  (ssh takes the first value). It now comes first, so GitHub connections
+  are no longer multiplexed or kept open. The chezmoi copy still has the old
+  order.
 - **Homebrew dropped** everywhere. Apple's `container` comes from nixpkgs.
   GUI apps (Ghostty) are installed outside Nix.
 - **compinit** now does its full check at most daily (`compinit -C`
