@@ -120,10 +120,6 @@ in
     completionInit = "";
 
     initContent = lib.mkMerge [
-      (lib.mkOrder 500 ''
-        zmodload zsh/zprof
-      '')
-
       (lib.mkOrder 550 ''
         fpath=(
             "${pkgs.zsh-defer}/share/zsh-defer"
@@ -170,9 +166,6 @@ in
 
       (lib.mkOrder 1500 ''
         [[ -f ~/.cache/ls_colors ]] && export LS_COLORS="$(< ~/.cache/ls_colors)"
-
-        # Per user: a fixed name in the shared /tmp breaks for a second account.
-        zprof > ~/.cache/zprof.log
       '')
     ];
   };
