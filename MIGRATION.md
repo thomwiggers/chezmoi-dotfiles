@@ -116,8 +116,12 @@ distro packages); `.claude.default_mode` → `thom.claude.defaultMode`;
   (ssh takes the first value). It now comes first, so GitHub connections
   are no longer multiplexed or kept open. The chezmoi copy still has the old
   order.
-- **Homebrew dropped** everywhere. Apple's `container` comes from nixpkgs.
-  GUI apps (Ghostty) are installed outside Nix.
+- **Homebrew no longer manages packages**; they come from Nix. Apple's
+  `container` comes from nixpkgs. GUI apps (Ghostty) are installed outside
+  Nix. On macOS Homebrew stays usable: `/opt/homebrew/bin` and `sbin` are
+  appended to PATH (after Nix, so Nix's tools win), its `site-functions`
+  are appended to `fpath`, and `HOMEBREW_NO_ENV_HINTS`/`HOMEBREW_BAT` are
+  still set. Nothing installs or updates Homebrew any more.
 - **compinit** now does its full check (including the `compaudit` security
   scan) when `~/.zcompdump` is missing or over a day old, and `compinit -C`
   otherwise; the dump's mtime is bumped after a full run. It still runs last, as before. The module's slot (570) was
@@ -264,7 +268,8 @@ On each existing chezmoi machine:
    `~/.zsh/zsh-defer/`, `~/.config/chezmoi/` (after confirming
    `~/.config/age/keys.txt`).
 5. Brew: `brew bundle dump` to check for anything not in
-   `modules/packages.nix`, then uninstall Homebrew if desired.
+   `modules/packages.nix`. Formulae duplicated in Nix can be uninstalled;
+   Homebrew itself stays on PATH (after Nix).
 
 Fresh machines: clone the repo (to `~/.local/share/chezmoi` until
 `thom.claude.dotfilesDir` is changed, or Claude Code's sandbox won't allow

@@ -31,6 +31,9 @@ in
   // lib.optionalAttrs isDarwin {
     SSH_SK_PROVIDER = "/usr/lib/ssh-keychain.dylib";
     RIP_GRAVEYARD = "$HOME/.Trash";
+
+    HOMEBREW_NO_ENV_HINTS = "true";
+    HOMEBREW_BAT = "true";
   };
 
   home.sessionPath = [ "$HOME/.local/bin" ];
@@ -43,6 +46,11 @@ in
     envExtra = ''
       typeset -U PATH path
       typeset -U fpath
+    ''
+    + lib.optionalString isDarwin ''
+
+      # Completions and functions of Homebrew-installed tools, after Nix's.
+      fpath=($fpath /opt/homebrew/share/zsh/site-functions(N/))
     '';
 
     profileExtra = ''
@@ -54,6 +62,13 @@ in
           "/Applications/Docker.app/Contents/Resources/bin"
           $path
       )
+
+      # Homebrew stays usable but isn't managed here. Appended, so Nix's
+      # tools win (and /etc/zshrc's nix-daemon.sh prepends the Nix profile
+      # later anyway); typeset -U keeps an earlier entry from path_helper.
+      if [[ -x /opt/homebrew/bin/brew ]]; then
+          path=($path /opt/homebrew/bin /opt/homebrew/sbin)
+      fi
     ''
     + ''
 
