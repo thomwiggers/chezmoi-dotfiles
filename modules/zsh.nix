@@ -171,7 +171,8 @@ in
       (lib.mkOrder 1500 ''
         [[ -f ~/.cache/ls_colors ]] && export LS_COLORS="$(< ~/.cache/ls_colors)"
 
-        zprof > /tmp/zprof.log
+        # Per user: a fixed name in the shared /tmp breaks for a second account.
+        zprof > ~/.cache/zprof.log
       '')
     ];
   };
