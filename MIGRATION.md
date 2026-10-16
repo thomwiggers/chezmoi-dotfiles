@@ -206,6 +206,25 @@ Known, explained differences (all deliberate):
 - `gh config set …` and `gpg`'s own config edits now fail (read-only store
   files). Change those through Nix instead.
 
+## Open: provisioning without secrets (cloud-init)
+
+chezmoi supports unattended, secret-less provisioning via
+`chezmoi init --apply --exclude encrypted`
+(`run_onchange_before_decrypt-private-key.sh.tmpl` checks for it). The Nix
+setup has no equivalent yet:
+
+- `home-manager switch` itself already copes: with no
+  `~/.config/age/keys.txt`, `decryptSecrets` warns and skips, and ssh ignores
+  the missing `Include config.private`.
+- `bootstrap.sh` does not: with no chezmoi key it prompts for the
+  `key.txt.age` passphrase, which blocks cloud-init.
+
+To do: a non-interactive no-secrets mode for `bootstrap.sh` (e.g.
+`--no-secrets` / `THOM_NO_SECRETS=1`) that skips the identity step, and
+optionally a `thom.age.enable` option so such hosts don't even warn. Also
+check that bootstrap works as a cloud-init `runcmd` (non-login shell, run as
+the target user via `su -l`, no TTY for `sudo`).
+
 ## Cut-over (manual)
 
 On each existing chezmoi machine:
