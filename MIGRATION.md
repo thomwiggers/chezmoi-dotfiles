@@ -118,8 +118,9 @@ distro packages); `.claude.default_mode` → `thom.claude.defaultMode`;
   order.
 - **Homebrew dropped** everywhere. Apple's `container` comes from nixpkgs.
   GUI apps (Ghostty) are installed outside Nix.
-- **compinit** now does its full check at most daily (`compinit -C`
-  otherwise; the dump's mtime is bumped after a full run). It still runs last, as before. The module's slot (570) was
+- **compinit** now does its full check (including the `compaudit` security
+  scan) when `~/.zcompdump` is missing or over a day old, and `compinit -C`
+  otherwise; the dump's mtime is bumped after a full run. It still runs last, as before. The module's slot (570) was
   tried and broke completion key bindings, because `key-bindings.zsh` runs
   `bindkey -e` afterwards.
 - **tmux**: no plugins (all were commented out). Every option the module

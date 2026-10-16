@@ -148,13 +148,14 @@ in
         fi
       '')
 
-      # Rebuild the completion dump at most once a day; otherwise skip the
-      # compaudit security scan with -C. The anonymous function's arguments
-      # are globbed with bare qualifiers (no EXTENDED_GLOB needed).
+      # Full compinit (with the compaudit security scan) when the dump is
+      # missing or over a day old; otherwise skip the scan with -C. The
+      # anonymous function's arguments are globbed with bare qualifiers (no
+      # EXTENDED_GLOB needed).
       (lib.mkOrder 1450 ''
         # Initialize completion
         () {
-            if (( $# )); then
+            if (( $# )) || [[ ! -e ''${ZDOTDIR:-$HOME}/.zcompdump ]]; then
                 # compinit leaves an unchanged dump alone; bump its mtime so
                 # the full check runs once a day, not on every start.
                 compinit && touch ''${ZDOTDIR:-$HOME}/.zcompdump
