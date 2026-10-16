@@ -152,7 +152,9 @@ Known, explained differences (all deliberate):
    `off` is now `false`.
 2. tmux: `set-environment PATH` swaps `/opt/homebrew/bin` for the Nix
    profile. Excluded from the comparator, along with session-specific
-   `default-shell`/`default-command`/`update-environment`.
+   `default-command`/`update-environment`. `default-shell` is now pinned to
+   the profile's zsh (was `$SHELL`), so tmux doesn't start bash where the
+   login shell is still bash; also excluded.
 3. zsh: `HIST_FCNTL_LOCK` is added by the history module. zsh-defer and
    zsh-syntax-highlighting come from store paths. `zsh-completions` is now
    actually on `fpath`; brew installed it but never added it. Homebrew

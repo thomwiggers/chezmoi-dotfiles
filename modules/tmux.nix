@@ -8,6 +8,9 @@
     enable = true;
     terminal = "xterm-256color";
     historyLimit = 10000;
+    # tmux otherwise starts $SHELL, which is still bash when the login shell
+    # wasn't switched (and always under nix-user-chroot, entered from bash).
+    shell = "${config.home.profileDirectory}/bin/zsh";
 
     # Pinned tmux built-in defaults.
     baseIndex = 0;
