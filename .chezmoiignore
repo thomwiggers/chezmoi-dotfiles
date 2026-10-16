@@ -17,6 +17,7 @@ hosts/**
 modules/**
 files/**
 secrets/**
+machines/**
 MIGRATION.md
 verify.sh
 bootstrap.sh

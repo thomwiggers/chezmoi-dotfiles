@@ -181,9 +181,9 @@ Known, explained differences (all deliberate):
    addition to `~/.config/chezmoi/key.txt` (bootstrap copies the key, so the
    old file lingers until purged), `~/.config/git` is readable, and
    `enableWeakerNestedSandbox` follows the role's `thom.container` instead
-   of runtime detection (verify.sh normalises it to the role's value). `allowRead/allowWrite` still name
-   `~/.local/share/chezmoi` (`thom.claude.dotfilesDir`). Change it if the repo
-   moves.
+   of runtime detection (verify.sh normalises it to the role's value).
+   `allowWrite` names the checkout at `~/.config/home-manager`
+   (`thom.claude.dotfilesDir`) instead of `~/.local/share/chezmoi`.
 6. Ghostty: config only on darwin (no Linux desktops). The file is
    `~/.config/ghostty/config`, not `config.ghostty`.
 7. devbox only updates on `nix flake update thom-container`, not every minute.
@@ -245,11 +245,11 @@ the target user via `su -l`, no TTY for `sudo`).
 
 On each existing chezmoi machine:
 
-1. Get the branch into the checkout: merge `hm-migration` into `main`, or
-   remove the review worktree first (`git worktree remove
-   .claude/worktrees/hm-migration`) and then `git switch hm-migration` — git
-   won't switch to a branch another worktree has checked out.
-2. `~/.local/share/chezmoi/bootstrap.sh <role>`. This reuses
+1. `git -C ~/.local/share/chezmoi pull`.
+2. `~/.local/share/chezmoi/bootstrap.sh [role]` (the role defaults to
+   darwin/linux/linux-arm by platform; `chroot` must be given). It first
+   clones the repo to `~/.config/home-manager`, where `home-manager` looks
+   for its flake, and continues from that checkout. This reuses
    `~/.config/chezmoi/key.txt` as `~/.config/age/keys.txt`, installs Nix if
    needed, and runs `home-manager switch -b hm-bak`. Files chezmoi wrote that
    HM now owns are kept as `*.hm-bak`. `activation.retireChezmoiFiles` moves
@@ -258,12 +258,15 @@ On each existing chezmoi machine:
    shell isn't a zsh (bash on fresh Linux hosts), it is changed to
    `~/.nix-profile/bin/zsh` via `sudo` (`/etc/shells` + `chsh`); an existing
    zsh, e.g. macOS's `/bin/zsh`, is kept, since HM's `~/.zshenv`/`~/.zprofile`
-   put Nix on PATH for it too. Run from a terminal, bootstrap then `exec`s
-   a login zsh, so the new setup is live immediately.
+   put Nix on PATH for it too. It registers the machine as
+   `machines/<hostname -s>` (containing the role) and commits that file, so
+   plain `home-manager switch` / `home-manager news` find
+   `<user>@<hostname>`; push the commit. Run from a terminal, bootstrap then
+   `exec`s a login zsh, so the new setup is live immediately.
 3. Check a new shell, `git config -l --show-origin`, `ssh -G <host>`, tmux.
-4. `chezmoi purge` (removes chezmoi's config/state/cache and source dir).
-   **Move the repo out of `~/.local/share/chezmoi` first** if you want to keep
-   the checkout, and update `thom.claude.dotfilesDir`. Afterwards delete the
+4. `chezmoi purge` (removes chezmoi's config/state/cache and the old
+   `~/.local/share/chezmoi` checkout; push anything committed there first).
+   Afterwards delete the
    leftovers HM doesn't manage: `~/.gitignore`, `~/.gitattributes`,
    `~/.zsh/zsh-defer/`, `~/.config/chezmoi/` (after confirming
    `~/.config/age/keys.txt`).
@@ -271,9 +274,12 @@ On each existing chezmoi machine:
    `modules/packages.nix`. Formulae duplicated in Nix can be uninstalled;
    Homebrew itself stays on PATH (after Nix).
 
-Fresh machines: clone the repo (to `~/.local/share/chezmoi` until
-`thom.claude.dotfilesDir` is changed, or Claude Code's sandbox won't allow
-writes to it) and run `./bootstrap.sh [role]`.
+Fresh machines: clone the repo anywhere and run `./bootstrap.sh [role]`;
+it moves itself to `~/.config/home-manager`. Afterwards, update with
+`git -C ~/.config/home-manager pull && home-manager switch`. Machines that
+aren't registered (or whose hostname changed) need
+`home-manager switch --flake '~/.config/home-manager#<user>@<role>'`;
+re-running `bootstrap.sh` registers them.
 
 Once every machine is switched, the chezmoi sources (`dot_*`, `private_*`,
 `exact_*`, `run_*`, `modify_*`, `.chezmoi*`, `key.txt.age` excepted) can be

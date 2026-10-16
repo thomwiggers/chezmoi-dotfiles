@@ -211,8 +211,13 @@ check() {
 		echo '{}' | "$(nix build --no-link --print-out-paths "$hm.config.thom.claude.$filter")" |
 			"$bin/jq" -S '
 				if .sandbox.filesystem.allowRead then .sandbox.filesystem.allowRead -= ["~/.config/git"] else . end
+				# The checkout moved from the chezmoi source dir.
+				| if .sandbox.filesystem then .sandbox.filesystem |= with_entries(
+					if .key == "allowRead" or .key == "allowWrite"
+					then .value |= map(if . == "~/.config/home-manager" then "~/.local/share/chezmoi" else . end)
+					else . end) else . end
 			' >"$work/b"
-		compare "$p (jq merge on {}; age key path, ~/.config/git read, container flag normalised)" "$work/a" "$work/b"
+		compare "$p (jq merge on {}; age key path, ~/.config/git read, checkout path, container flag normalised)" "$work/a" "$work/b"
 		;;
 	*)
 		if [[ ! -e $h ]]; then

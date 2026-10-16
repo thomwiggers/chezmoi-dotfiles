@@ -76,6 +76,31 @@
         ) roles
       ) users;
 
+      # Machines registered by bootstrap.sh: machines/<hostname -s> holds the
+      # role name. `home-manager switch` without --flake picks
+      # <user>@<hostname>, so these alias the role configurations.
+      machines =
+        nixpkgs.lib.mapAttrs
+          (
+            host: _:
+            let
+              role = nixpkgs.lib.trim (builtins.readFile (./machines + "/${host}"));
+            in
+            roles.${role} or (throw "machines/${host}: unknown role '${role}'")
+          )
+          (
+            nixpkgs.lib.filterAttrs (_: type: type == "regular") (
+              if builtins.pathExists ./machines then builtins.readDir ./machines else { }
+            )
+          );
+
+      machineConfigs = nixpkgs.lib.concatMap (
+        user:
+        nixpkgs.lib.mapAttrsToList (
+          host: role: nixpkgs.lib.nameValuePair "${user}@${host}" { inherit user role; }
+        ) machines
+      ) users;
+
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -85,11 +110,11 @@
     in
     {
       homeConfigurations = nixpkgs.lib.mapAttrs (_: c: mkHome c.user c.role) (
-        nixpkgs.lib.listToAttrs configs
+        nixpkgs.lib.listToAttrs (machineConfigs ++ configs)
       );
 
-      # `nix flake check` builds every configuration native to the checking
-      # machine.
+      # `nix flake check` builds every role configuration native to the
+      # checking machine (machine aliases would only repeat them).
       checks = forAllSystems (
         system:
         nixpkgs.lib.listToAttrs (

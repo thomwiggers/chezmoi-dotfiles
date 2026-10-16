@@ -4,15 +4,24 @@
 #
 #   ./bootstrap.sh [role]
 #
-# Roles (see flake.nix): darwin, linux, linux-arm, chroot. Default: darwin on
-# macOS, linux/linux-arm by architecture on Linux. Use `chroot` on Linux hosts
-# without root: Nix then lives in ~/.nix and runs inside nix-user-chroot.
+# Roles (see flake.nix): darwin, linux, linux-arm, chroot. Default: the role
+# this machine was registered with (machines/<hostname>), else darwin on
+# macOS and linux/linux-arm by architecture on Linux. Use `chroot` on Linux
+# hosts without root: Nix then lives in ~/.nix and runs inside
+# nix-user-chroot.
+#
+# Run from any checkout, it clones the repository to ~/.config/home-manager
+# (where home-manager looks for its flake) and continues from there. At the
+# end it registers the machine, so a plain `home-manager switch` works.
 #
 # Safe to re-run; every step is skipped when already done. Written for the
 # bash 3.2 that ships with macOS.
 set -euo pipefail
 
-repo=$(cd "$(dirname "$0")" && pwd)
+repo=$(cd "$(dirname "$0")" && pwd -P)
+hm_dir="${XDG_CONFIG_HOME:-$HOME/.config}/home-manager"
+default_url=https://github.com/thomwiggers/chezmoi-dotfiles.git
+host=$(hostname -s)
 
 NIX_USER_CHROOT_VERSION=2.1.1
 nix_user_chroot_sha256() {
@@ -39,6 +48,9 @@ Linux/x86_64) default_role=linux ;;
 Linux/aarch64) default_role=linux-arm ;;
 *) die "unsupported platform $os/$arch" ;;
 esac
+if [[ -s $repo/machines/$host ]]; then
+	default_role=$(cat "$repo/machines/$host")
+fi
 role=${1:-$default_role}
 case "$role" in
 darwin | linux | linux-arm | chroot) ;;
@@ -60,6 +72,25 @@ want_home=/home/$user
 
 need curl
 [[ $os == Linux ]] && need xz "the Nix installer tarball is xz-compressed"
+
+# --- 0. Repository location -------------------------------------------------------
+
+# home-manager finds its flake in ~/.config/home-manager by default. Clone
+# from this checkout (keeping any local commits) and point origin at the
+# remote this checkout uses.
+if [[ $repo != "$(cd "$hm_dir" 2>/dev/null && pwd -P)" ]]; then
+	if [[ ! -e $hm_dir ]]; then
+		need git
+		url=$(git -C "$repo" remote get-url origin 2>/dev/null || echo "$default_url")
+		say "Cloning this repository into $hm_dir"
+		git clone -q "$repo" "$hm_dir"
+		git -C "$hm_dir" remote set-url origin "$url"
+	elif [[ ! -e $hm_dir/flake.nix || ! -e $hm_dir/.git ]]; then
+		die "$hm_dir exists but isn't a checkout of this repository; move it aside"
+	fi
+	say "Continuing from $hm_dir"
+	exec "$hm_dir/bootstrap.sh" "$@"
+fi
 
 # Run a command with Nix available: directly, or inside nix-user-chroot.
 in_nix() {
@@ -152,7 +183,23 @@ say "Activating $user@$role"
 # kept as <file>.hm-bak.
 in_nix nix run "$repo#home-manager" -- switch -b hm-bak --flake "$repo#$user@$role"
 
-# --- 4. Login shell -------------------------------------------------------------
+# --- 4. Register this machine ---------------------------------------------------
+
+# Lets a plain `home-manager switch` find <user>@<hostname>. Committed after
+# the switch, when Home Manager has configured git's identity.
+if [[ $(cat "$repo/machines/$host" 2>/dev/null) != "$role" ]]; then
+	say "Registering $host as $role (machines/$host)"
+	mkdir -p "$repo/machines"
+	echo "$role" >"$repo/machines/$host"
+	if in_nix git -C "$repo" add "machines/$host" &&
+		in_nix git -C "$repo" commit -q -m "Register $host as $role" -- "machines/$host"; then
+		say "Committed; push it with: git -C $repo push"
+	else
+		say "Couldn't commit machines/$host; commit and push it yourself"
+	fi
+fi
+
+# --- 5. Login shell -------------------------------------------------------------
 
 zsh_path="$HOME/.nix-profile/bin/zsh"
 

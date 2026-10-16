@@ -201,10 +201,11 @@ in
   options.thom.claude = {
     dotfilesDir = lib.mkOption {
       type = lib.types.str;
-      default = "~/.local/share/chezmoi";
+      default = "~/.config/home-manager";
       description = ''
         Checkout of this repository, which Claude Code's sandbox may read and
-        write. Still the chezmoi source dir until the repo is moved.
+        write. bootstrap.sh clones it here, where home-manager looks by
+        default.
       '';
     };
     jsonMerge = lib.mkOption {
