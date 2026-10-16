@@ -7,9 +7,9 @@
 }:
 {
   thom.age.secrets = {
-    # Included from the programs.ssh-generated ~/.ssh/config (see ssh.nix).
+    # Host blocks included from the generated ~/.ssh/config (see ssh.nix).
     ssh-config = {
-      file = ../secrets/ssh_config.age;
+      file = ../secrets/ssh_config_private.age;
       target = ".ssh/config.private";
     };
     halloy-config = {

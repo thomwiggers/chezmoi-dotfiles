@@ -235,19 +235,22 @@ nix eval --json "$hm.config.thom.age.secrets" --apply 'builtins.mapAttrs (_: s: 
 	"$bin/jq" -r '.[]' | sort >"$work/hm-secrets"
 while IFS= read -r p; do
 	want=$p
-	# ~/.ssh/config is now generated and includes the decrypted private part.
+	# ~/.ssh/config is split: generic part native, host blocks encrypted and
+	# included. Checked once with ssh -G against the decrypted original.
 	if [[ $p == .ssh/config ]]; then
 		want=.ssh/config.private
 		grep -qx 'Include config.private' "$hf/.ssh/config" ||
 			MISMATCH "$p" ".ssh/config does not include config.private"
 	fi
 	if grep -qxF "$want" "$work/hm-secrets"; then
-		if [[ $want == "$p" ]]; then OK "$p (secret)"; else EXPLAINED "$p" "decrypted to $want, included from generated .ssh/config"; fi
+		if [[ $want == "$p" ]]; then OK "$p (secret)"; else EXPLAINED "$p" "split: generic part in programs.ssh, host blocks decrypted to $want and included"; fi
 	else
 		MISMATCH "$p" "no thom.age.secrets entry"
 	fi
 done < <(chezmoi --source "$PWD" managed --include=encrypted --exclude=dirs)
 
+# secrets/ssh_config_private.age is a new ciphertext (host blocks only), so
+# it has no chezmoi counterpart.
 echo "== ciphertexts (byte compare with the chezmoi sources; nothing decrypted)"
 while IFS='|' read -r new old; do
 	if cmp -s "secrets/$new" "$old"; then
@@ -256,7 +259,6 @@ while IFS='|' read -r new old; do
 		MISMATCH "secrets/$new" "differs from $old; re-copy it"
 	fi
 done <<'LIST'
-ssh_config.age|private_dot_ssh/encrypted_config.age
 halloy_config.toml.age|dot_config/exact_halloy/encrypted_config.toml.age
 halloy_theme_catppucin_light.toml.age|dot_config/exact_halloy/exact_private_themes/encrypted_catppucin light.toml.age
 senpai.scfg.age|dot_config/exact_senpai/encrypted_private_senpai.scfg.age

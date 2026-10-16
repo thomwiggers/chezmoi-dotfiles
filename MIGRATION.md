@@ -67,7 +67,7 @@ script · **R** `run_` script · **X** external · **L** symlink.
 | `~/.config/gh/config.yml` | `dot_config/gh/private_config.yml` | S | `programs.gh.settings` (+ `gitCredentialHelper`) |
 | `~/.gnupg/gpg.conf` | `private_dot_gnupg/gpg.conf` | S | `programs.gpg.settings` (`mkForce`, keyrings stay mutable) |
 | `~/.tmux.conf` | `dot_tmux.conf` | S | `programs.tmux` → `~/.config/tmux/tmux.conf` |
-| `~/.ssh/config` | `private_dot_ssh/encrypted_config.age` | E | `programs.ssh` writes `Include config.private`; the ciphertext decrypts to `~/.ssh/config.private` |
+| `~/.ssh/config` | `private_dot_ssh/encrypted_config.age` | E | split: generic part in `programs.ssh`; host blocks re-encrypted as `secrets/ssh_config_private.age` → `~/.ssh/config.private`, `Include`d |
 | `~/.ssh/sockets/` | `private_dot_ssh/private_sockets/.keep` | S | activation `mkdir` + `chmod 700` |
 | `~/.config/ghostty/config.ghostty` | `dot_config/ghostty/config.ghostty` | S | `programs.ghostty.settings` → `~/.config/ghostty/config`, darwin only, `package = null` |
 | `~/.config/ghostty/default.config` | same dir | S | `xdg.configFile`, darwin only |
@@ -101,12 +101,19 @@ distro packages); `.claude.default_mode` → `thom.claude.defaultMode`;
   through a systemd user service that nix-user-chroot and containers lack.
   `modules/secrets.nix` runs `age --decrypt` at activation into 0600 files.
   Ciphertext is in the Nix store; plaintext never is. The chezmoi ciphertexts
-  are reused unchanged (same recipient), so **no re-encryption is needed**.
+  are reused unchanged (same recipient), so **no re-encryption is needed**,
+  except the SSH host blocks (see below).
   New secret: `age -e -r <recipient> -a -o secrets/x.age`, then add an entry to
   `modules/secret-files.nix`. Identity moved to `~/.config/age/keys.txt`.
-- **SSH:** everything in `programs.ssh` is world-readable in the store, so
-  host blocks stay encrypted and are `Include`d. Move non-sensitive hosts into
-  `programs.ssh.matchBlocks` when convenient.
+- **SSH:** split. The repo is public and the store world-readable, so only
+  the generic part is native (`programs.ssh`: canonicalisation,
+  `HashKnownHosts`, `Host *`, `github.com`, the `*.incus`/`*.ts.net` block).
+  Host blocks with addresses, ports and users (pqsh bastion/gitlab, cocytus,
+  eprint) are re-encrypted alone in `secrets/ssh_config_private.age` and
+  `Include`d. `ssh -G` for every host, with canonicalisation on and off,
+  matched the original config exactly. Block order is kept: the old
+  `Host github.com` block comes after `Host *` and so has no effect (ssh
+  takes the first value); preserved, not fixed.
 - **Homebrew dropped** everywhere. Apple's `container` comes from nixpkgs.
   GUI apps (Ghostty) are installed outside Nix.
 - **compinit** now does its full check at most daily (`compinit -C`
@@ -174,8 +181,8 @@ Known, explained differences (all deliberate):
    `~/.config/ghostty/config`, not `config.ghostty`.
 7. devbox only updates on `nix flake update thom-container`, not every minute.
 8. zsh-defer files are no longer copied into `~/.zsh/zsh-defer`.
-9. `~/.ssh/config` is generated; the encrypted content is
-   `~/.ssh/config.private`.
+9. `~/.ssh/config` is generated (generic part native); the host blocks are
+   in `~/.ssh/config.private`.
 
 ## Risks / unverified
 
