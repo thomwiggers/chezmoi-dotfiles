@@ -151,7 +151,17 @@ say "Activating $user@$role"
 # kept as <file>.hm-bak.
 in_nix nix run "$repo#home-manager" -- switch -b hm-bak --flake "$repo#$user@$role"
 
-# --- 4. Entering the chroot -------------------------------------------------------
+# --- 4. Login shell -------------------------------------------------------------
+
+zsh_path="$HOME/.nix-profile/bin/zsh"
+
+login_shell() {
+	if [[ $os == Darwin ]]; then
+		dscl . -read "/Users/$user" UserShell | awk '{print $2}'
+	else
+		getent passwd "$user" | cut -d: -f7
+	fi
+}
 
 if [[ $role == chroot ]]; then
 	# Everything Home Manager links points into /nix/store, which only exists
@@ -168,16 +178,39 @@ if [[ $role == chroot ]]; then
 
 $marker
 if [ -z "\${NIX_USER_CHROOT:-}" ] && [ -x "$nix_user_chroot" ] && [[ \$- == *i* ]]; then
-    export NIX_USER_CHROOT=1
-    exec "$nix_user_chroot" "\$HOME/.nix" "\$HOME/.nix-profile/bin/zsh" -l
+    export NIX_USER_CHROOT=1 SHELL="\$HOME/.nix-profile/bin/zsh"
+    exec "$nix_user_chroot" "\$HOME/.nix" "\$SHELL" -l
 fi
 EOF
 	fi
-	case "${SHELL##*/}" in
-	bash) ;;
-	*) say "Your login shell is $SHELL; switch it to bash (chsh -s /bin/bash) so ~/.bash_profile can enter the chroot" ;;
+	case "$(login_shell)" in
+	*/bash) ;;
+	*) say "Your login shell is $(login_shell); switch it to bash (chsh -s /bin/bash) so ~/.bash_profile can enter the chroot" ;;
 	esac
-	say "Done. Log in again, or run: $nix_user_chroot ~/.nix ~/.nix-profile/bin/zsh -l"
+	enter=("$nix_user_chroot" "$HOME/.nix" "$zsh_path" -l)
+	export NIX_USER_CHROOT=1
 else
-	say "Done. Open a new shell. To make Nix's zsh the login shell, add $HOME/.nix-profile/bin/zsh to /etc/shells and chsh to it."
+	# Any zsh will do: Home Manager's ~/.zshenv and ~/.zprofile put Nix on
+	# PATH even for the system zsh (macOS's default /bin/zsh). Anything else
+	# (bash on fresh Linux hosts) is switched to the profile's zsh.
+	current=$(login_shell)
+	if [[ ${current##*/} != zsh ]]; then
+		say "Changing the login shell from $current to $zsh_path (needs sudo)"
+		if { grep -qxF "$zsh_path" /etc/shells ||
+			echo "$zsh_path" | sudo tee -a /etc/shells >/dev/null; } &&
+			sudo chsh -s "$zsh_path" "$user"; then
+			:
+		else
+			say "Couldn't change the login shell; do it by hand: add $zsh_path to /etc/shells, then chsh -s $zsh_path"
+		fi
+	fi
+	enter=("$zsh_path" -l)
 fi
+export SHELL="$zsh_path"
+
+if [[ -t 0 && -t 1 ]]; then
+	say "Done. Starting a login shell with the new configuration"
+	unset NIX_CONFIG
+	exec "${enter[@]}"
+fi
+say "Done. Log in again (or run: ${enter[*]})"

@@ -240,7 +240,12 @@ On each existing chezmoi machine:
    needed, and runs `home-manager switch -b hm-bak`. Files chezmoi wrote that
    HM now owns are kept as `*.hm-bak`. `activation.retireChezmoiFiles` moves
    `~/.gitconfig`, `~/.tmux.conf` and `~/.config/ghostty/config.ghostty`
-   aside (they would shadow or duplicate the new config).
+   aside (they would shadow or duplicate the new config). If the login
+   shell isn't a zsh (bash on fresh Linux hosts), it is changed to
+   `~/.nix-profile/bin/zsh` via `sudo` (`/etc/shells` + `chsh`); an existing
+   zsh, e.g. macOS's `/bin/zsh`, is kept, since HM's `~/.zshenv`/`~/.zprofile`
+   put Nix on PATH for it too. Run from a terminal, bootstrap then `exec`s
+   a login zsh, so the new setup is live immediately.
 3. Check a new shell, `git config -l --show-origin`, `ssh -G <host>`, tmux.
 4. `chezmoi purge` (removes chezmoi's config/state/cache and source dir).
    **Move the repo out of `~/.local/share/chezmoi` first** if you want to keep
@@ -250,7 +255,6 @@ On each existing chezmoi machine:
    `~/.config/age/keys.txt`).
 5. Brew: `brew bundle dump` to check for anything not in
    `modules/packages.nix`, then uninstall Homebrew if desired.
-6. Optionally make Nix's zsh the login shell (`/etc/shells` + `chsh`).
 
 Fresh machines: clone the repo (to `~/.local/share/chezmoi` until
 `thom.claude.dotfilesDir` is changed, or Claude Code's sandbox won't allow
