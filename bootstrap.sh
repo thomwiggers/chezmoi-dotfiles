@@ -89,8 +89,9 @@ install_nix_rootless() {
 		mv "$tmp" "$nix_user_chroot"
 	fi
 
-	"$nix_user_chroot" "$HOME/.nix" true 2>/dev/null ||
-		die "nix-user-chroot can't create a user namespace here (kernel.unprivileged_userns_clone / user.max_user_namespaces?)"
+	[[ -d $HOME/.nix ]] || mkdir -m 0755 "$HOME/.nix"
+	"$nix_user_chroot" "$HOME/.nix" true ||
+		die "nix-user-chroot can't set up its namespace here (see the error above; user namespaces disabled, or blocked by AppArmor/seccomp in a container?)"
 
 	if [[ ! -e $HOME/.nix-profile/etc/profile.d/nix.sh ]]; then
 		say "Installing single-user Nix into ~/.nix (inside nix-user-chroot)"
