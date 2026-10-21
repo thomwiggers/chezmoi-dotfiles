@@ -7,6 +7,7 @@
 {
   imports = [
     ./modules/options.nix
+    ./modules/nix.nix
     ./modules/files.nix
     ./modules/zsh.nix
     ./modules/git.nix
