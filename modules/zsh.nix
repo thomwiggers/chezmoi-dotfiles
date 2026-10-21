@@ -63,11 +63,15 @@ in
           $path
       )
 
-      # Homebrew stays usable but isn't managed here. Appended, so Nix's
-      # tools win (and /etc/zshrc's nix-daemon.sh prepends the Nix profile
-      # later anyway); typeset -U keeps an earlier entry from path_helper.
-      if [[ -x /opt/homebrew/bin/brew ]]; then
-          path=($path /opt/homebrew/bin /opt/homebrew/sbin)
+      # Homebrew stays usable but isn't managed here. shellenv sets
+      # HOMEBREW_PREFIX/CELLAR/REPOSITORY, MANPATH and INFOPATH; it prepends
+      # to PATH, so move Homebrew behind everything else for Nix's tools to
+      # win (/etc/zshrc's nix-daemon.sh prepends the Nix profile later anyway).
+      if [[ -z "$HOMEBREW_PREFIX" && -x /opt/homebrew/bin/brew ]]; then
+          eval "$(/opt/homebrew/bin/brew shellenv zsh)"
+      fi
+      if [[ -n "$HOMEBREW_PREFIX" ]]; then
+          path=(''${path:#$HOMEBREW_PREFIX/(bin|sbin)} $HOMEBREW_PREFIX/bin $HOMEBREW_PREFIX/sbin)
       fi
     ''
     + ''
