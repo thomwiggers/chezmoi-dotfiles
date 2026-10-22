@@ -20,10 +20,13 @@ test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
 test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 # devbox (thom-container): Claude Code token from `devbox
-# --register-claude-token`, for shells started after the entrypoint's
-# (attach, ssh).
-if [[ -z ${CLAUDE_CODE_OAUTH_TOKEN-} && -r /run/user/$UID/claude-oauth-token ]]; then
-    export CLAUDE_CODE_OAUTH_TOKEN=$(</run/user/$UID/claude-oauth-token)
+# --register-claude-token`. Not exported: only claude gets it, and the scrub
+# keeps it from claude's own subprocesses (Bash tool, hooks, MCP servers).
+if [[ -r /run/user/$UID/claude-oauth-token ]]; then
+    claude() {
+        CLAUDE_CODE_OAUTH_TOKEN=$(</run/user/$UID/claude-oauth-token) \
+            CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 command claude "$@"
+    }
 fi
 {{ end }}
 
