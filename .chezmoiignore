@@ -18,6 +18,7 @@ modules/**
 files/**
 secrets/**
 machines/**
+.github/**
 MIGRATION.md
 verify.sh
 bootstrap.sh
