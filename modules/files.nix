@@ -34,11 +34,13 @@
 
   # Apple's container: resolve <name>.devbox for devbox containers. The app
   # rewrites this file, so seed it once instead of linking a read-only store
-  # path.
+  # path. Runs before containerSystem, whose `container system start` rewrites
+  # the file; a leftover store symlink from the old setup is replaced.
   home.activation.seedContainerConfig = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin (
-    lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    lib.hm.dag.entryBetween [ "containerSystem" ] [ "writeBoundary" ] ''
       f="${config.xdg.configHome}/container/config.toml"
-      if [ ! -e "$f" ]; then
+      if [ -L "$f" ] || [ ! -e "$f" ]; then
+        run rm -f "$f"
         run mkdir -p "$(dirname "$f")"
         run cp ${pkgs.writeText "container-config.toml" ''
           [dns]
