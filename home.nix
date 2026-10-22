@@ -12,6 +12,7 @@
     ./modules/zsh.nix
     ./modules/git.nix
     ./modules/tmux.nix
+    ./modules/direnv.nix
     ./modules/secrets.nix
     ./modules/secret-files.nix
     ./modules/ssh.nix
