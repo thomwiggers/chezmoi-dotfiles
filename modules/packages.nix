@@ -20,6 +20,9 @@ in
       dust
       jq
       neovim
+      # LazyVim's lang.nix extra: language server and formatter.
+      nil
+      nixfmt
       python3
       ripgrep
       uv
