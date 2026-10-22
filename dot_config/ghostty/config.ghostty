@@ -1,3 +1,0 @@
-# enable all features
-shell-integration-features = true
-macos-option-as-alt = false

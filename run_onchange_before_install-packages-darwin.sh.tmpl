@@ -1,6 +1,0 @@
-{{- if eq .chezmoi.os "darwin" -}}
-#!/bin/bash
-set -euo pipefail
-
-{{ template "brew-install.sh" . }}
-{{- end -}}
