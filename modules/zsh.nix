@@ -55,13 +55,12 @@ in
     + lib.optionalString (!isDarwin) ''
 
       # devbox (thom-container): Claude Code token from `devbox
-      # --register-claude-token`. Not exported: only claude gets it, and the scrub
-      # keeps it from claude's own subprocesses (Bash tool, hooks, MCP servers).
+      # --register-claude-token`, for shells the entrypoint didn't start (attach,
+      # ssh). Claude Code reads it from the descriptor; the token itself is never
+      # in the environment.
       if [[ -r /run/user/$UID/claude-oauth-token ]]; then
-          claude() {
-              CLAUDE_CODE_OAUTH_TOKEN=$(</run/user/$UID/claude-oauth-token) \
-                  CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 command claude "$@"
-          }
+          exec 9</run/user/$UID/claude-oauth-token
+          export CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR=9
       fi
     '';
 
