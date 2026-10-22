@@ -49,6 +49,12 @@
         UserKnownHostsFile = "/dev/null";
         LogLevel = "ERROR";
       };
+
+      devbox = {
+        header = "Host *.devbox";
+        User = "thom";
+        StrictHostKeyChecking = "accept-new";
+      };
     };
   };
 
