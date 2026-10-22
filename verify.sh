@@ -157,7 +157,7 @@ check() {
 		tmux_opts "$hf/.config/tmux/tmux.conf" >"$work/b"
 		compare "$p -> .config/tmux/tmux.conf (tmux show-options)" "$work/a" "$work/b"
 		;;
-	.config/starship.toml)
+	.config/starship.toml | .config/direnv/direnv.toml)
 		render "$p"
 		toml_json "$work/cz" >"$work/a"
 		toml_json "$h" >"$work/b"
