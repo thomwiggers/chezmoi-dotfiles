@@ -18,6 +18,15 @@ export RIP_GRAVEYARD="$HOME/.Trash"
 {{ else if eq .chezmoi.os "linux" }}
 test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
 test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+# devbox (thom-container): Claude Code token from `devbox
+# --register-claude-token`, for shells the entrypoint didn't start (attach,
+# ssh). Claude Code reads it from the descriptor; the token itself is never
+# in the environment.
+if [[ -r /run/user/$UID/claude-oauth-token ]]; then
+    exec 9</run/user/$UID/claude-oauth-token
+    export CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR=9
+fi
 {{ end }}
 
 path=(

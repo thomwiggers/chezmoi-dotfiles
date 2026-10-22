@@ -51,6 +51,17 @@ in
 
       # Completions and functions of Homebrew-installed tools, after Nix's.
       fpath=($fpath /opt/homebrew/share/zsh/site-functions(N/))
+    ''
+    + lib.optionalString (!isDarwin) ''
+
+      # devbox (thom-container): Claude Code token from `devbox
+      # --register-claude-token`, for shells the entrypoint didn't start (attach,
+      # ssh). Claude Code reads it from the descriptor; the token itself is never
+      # in the environment.
+      if [[ -r /run/user/$UID/claude-oauth-token ]]; then
+          exec 9</run/user/$UID/claude-oauth-token
+          export CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR=9
+      fi
     '';
 
     profileExtra = ''
