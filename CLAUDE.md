@@ -21,7 +21,7 @@ Commit directly to `main`; stage specific files.
 | `files/` | static files, linked by `modules/files.nix` |
 | `secrets/*.age` | age-encrypted files; targets in `modules/secret-files.nix`, decrypted at activation by `modules/secrets.nix` |
 | `machines/<hostname -s>` | the machine's role; written and committed by `bootstrap.sh` |
-| `bootstrap.sh [role]` | Nix (or nix-user-chroot for `chroot`), age key, clone to `~/.config/home-manager`, switch, register machine, login shell |
+| `bootstrap.sh [role]` (or `curl … | sh`) | Nix (or nix-user-chroot for `chroot`), age key, clone to `~/.config/home-manager`, switch, register machine, login shell |
 | `secrets/recipient.txt` | age recipient for new secrets |
 
 ## Commands
