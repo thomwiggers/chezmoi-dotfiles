@@ -30,6 +30,9 @@ export COMPOSE_DOCKER_CLI_BUILD=1
 
 export CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY=1
 
+# Silence direnv's log; starship's direnv module shows the state instead
+export DIRENV_LOG_FORMAT=""
+
 export XZ_DEFAULTS="-T0"
 export ZSTD_CLEVEL="6"
 export ZSTD_NBTHREADS="0"

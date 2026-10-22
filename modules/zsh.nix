@@ -236,6 +236,8 @@ in
 
       nodejs.disabled = true;
 
+      direnv.disabled = false;
+
       # Devbox (thom-container) profile, shown next to the hostname like SSH is
       env_var.THOM_CONTAINER_PROFILE = {
         format = "[📦 $env_value]($style) in ";
