@@ -3,6 +3,7 @@
 # and activate the Home Manager configuration from this repository.
 #
 #   ./bootstrap.sh [role]
+#   curl -fsSL https://raw.githubusercontent.com/thomwiggers/home-manager-config/main/bootstrap.sh | sh [-s -- role]
 #
 # Roles (see flake.nix): darwin, linux, linux-arm, chroot. Default: the role
 # this machine was registered with (machines/<hostname>), else darwin on
@@ -16,11 +17,40 @@
 #
 # Safe to re-run; every step is skipped when already done. Written for the
 # bash 3.2 that ships with macOS.
+
+# Piped into a shell there is no checkout, stdin is the script and `sh` may
+# be dash: clone the repository and run its copy under bash, with the
+# terminal as stdin for the passphrase and sudo prompts. POSIX sh up to the
+# exec; the function means a truncated download runs nothing.
+bootstrap_from_pipe() {
+	dir="${XDG_CONFIG_HOME:-$HOME/.config}/home-manager"
+	if [ ! -e "$dir" ]; then
+		command -v git >/dev/null 2>&1 || {
+			echo "error: git is required" >&2
+			exit 1
+		}
+		printf '\033[1m==> %s\033[0m\n' "Cloning the repository into $dir" >&2
+		git clone -q https://github.com/thomwiggers/home-manager-config.git "$dir" || exit 1
+	fi
+	[ -f "$dir/bootstrap.sh" ] || {
+		echo "error: $dir exists but isn't a checkout of this repository; move it aside" >&2
+		exit 1
+	}
+	if (exec </dev/tty) 2>/dev/null; then
+		exec bash "$dir/bootstrap.sh" "$@" </dev/tty
+	fi
+	exec bash "$dir/bootstrap.sh" "$@" </dev/null
+}
+case ${0##*/} in
+bootstrap.sh) ;;
+*) bootstrap_from_pipe "$@" ;;
+esac
+
 set -euo pipefail
 
 repo=$(cd "$(dirname "$0")" && pwd -P)
 hm_dir="${XDG_CONFIG_HOME:-$HOME/.config}/home-manager"
-default_url=https://github.com/thomwiggers/chezmoi-dotfiles.git
+default_url=https://github.com/thomwiggers/home-manager-config.git
 host=$(hostname -s)
 
 NIX_USER_CHROOT_VERSION=2.1.1
