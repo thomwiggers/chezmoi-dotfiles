@@ -25,6 +25,7 @@ in
       nixfmt
       python3
       ripgrep
+      sops
       uv
       vivid
       wget
