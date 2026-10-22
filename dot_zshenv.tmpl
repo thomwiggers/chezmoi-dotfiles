@@ -18,6 +18,13 @@ export RIP_GRAVEYARD="$HOME/.Trash"
 {{ else if eq .chezmoi.os "linux" }}
 test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
 test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+# devbox (thom-container): Claude Code token from `devbox
+# --register-claude-token`, for shells started after the entrypoint's
+# (attach, ssh).
+if [[ -z ${CLAUDE_CODE_OAUTH_TOKEN-} && -r /run/user/$UID/claude-oauth-token ]]; then
+    export CLAUDE_CODE_OAUTH_TOKEN=$(</run/user/$UID/claude-oauth-token)
+fi
 {{ end }}
 
 path=(
