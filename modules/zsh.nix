@@ -247,7 +247,17 @@ in
 
       nodejs.disabled = true;
 
-      direnv.disabled = false;
+      # "direnv" when all is well; only problems are spelled out
+      direnv = {
+        disabled = false;
+        format = "[$symbol$loaded$allowed]($style) ";
+        symbol = "direnv";
+        loaded_msg = "";
+        unloaded_msg = " (not loaded)";
+        allowed_msg = "";
+        not_allowed_msg = " (not allowed)";
+        denied_msg = " (denied)";
+      };
 
       # Devbox (thom-container) profile, shown next to the hostname like SSH is
       env_var.THOM_CONTAINER_PROFILE = {
