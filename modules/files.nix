@@ -26,4 +26,12 @@
   xdg.configFile."ghostty/default.config" = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
     source = ../files/ghostty/default.config;
   };
+
+  # Apple's container: resolve <name>.devbox for devbox containers.
+  xdg.configFile."container/config.toml" = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
+    text = ''
+      [dns]
+      domain = "devbox"
+    '';
+  };
 }
