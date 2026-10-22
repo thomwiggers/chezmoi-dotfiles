@@ -22,6 +22,14 @@ in
     executable = true;
   };
 
+  # zsh completions for Apple's container
+  # (docs/shell-completions.md); ~/.zsh/completions is already on fpath.
+  home.file.".zsh/completions/_container" = lib.mkIf isDarwin {
+    source = pkgs.runCommand "_container" { } ''
+      ${lib.getExe' pkgs.container "container"} --generate-completion-script zsh > $out
+    '';
+  };
+
   home.activation = {
     # run_after_nvim_sync.sh: sync lazy.nvim plugins quietly; show the
     # output only if something went wrong.
