@@ -16,6 +16,7 @@ in
     [
       age
       bat
+      curl
       dust
       jq
       neovim
@@ -37,5 +38,7 @@ in
       # Claude Code's sandbox; were sudo-installed distro packages.
       bubblewrap
       socat
+      # nvim-treesitter compiles parsers; macOS has cc from the Xcode CLT.
+      gcc
     ];
 }
