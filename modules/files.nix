@@ -1,5 +1,10 @@
 # Files deployed verbatim (no Home Manager module covers them).
-{ lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   home.file = {
     ".zsh/functions.sh".source = ../files/zsh/functions.sh;
@@ -27,11 +32,20 @@
     source = ../files/ghostty/default.config;
   };
 
-  # Apple's container: resolve <name>.devbox for devbox containers.
-  xdg.configFile."container/config.toml" = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
-    text = ''
-      [dns]
-      domain = "devbox"
-    '';
-  };
+  # Apple's container: resolve <name>.devbox for devbox containers. The app
+  # rewrites this file, so seed it once instead of linking a read-only store
+  # path.
+  home.activation.seedContainerConfig = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin (
+    lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      f="${config.xdg.configHome}/container/config.toml"
+      if [ ! -e "$f" ]; then
+        run mkdir -p "$(dirname "$f")"
+        run cp ${pkgs.writeText "container-config.toml" ''
+          [dns]
+          domain = "devbox"
+        ''} "$f"
+        run chmod u+w "$f"
+      fi
+    ''
+  );
 }
