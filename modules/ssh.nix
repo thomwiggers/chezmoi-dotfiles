@@ -53,7 +53,8 @@
       devbox = {
         header = "Host *.devbox";
         User = "thom";
-        StrictHostKeyChecking = "accept-new";
+        StrictHostKeyChecking = "no";
+        UserKnownHostsFile = "/dev/null";
       };
     };
   };
