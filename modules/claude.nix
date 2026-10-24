@@ -39,6 +39,9 @@ let
   # Unix socket is opened. ~/.cache/nix holds the eval/fetcher caches; /nix
   # is only writable for single-user installs (nix-user-chroot, containers),
   # where Unix permissions don't already stop it.
+  #
+  # Python: uv/uvx and pip caches; ~/.local/share/uv holds uv-managed Pythons and
+  # tools. pip uses ~/Library/Caches/pip on macOS.
   nixSocket =
     if isDarwin then
       ''"allowUnixSockets": ["/nix/var/nix/daemon-socket/socket"],''
@@ -129,6 +132,9 @@ let
           "allowWrite": [
             ${builtins.toJSON cfg.dotfilesDir},
             "~/.cache/nix",
+            "~/.cache/uv",
+            "~/.local/share/uv",
+            "~/.cache/pip",${lib.optionalString isDarwin ''"~/Library/Caches/pip",''}
             "/nix"
           ]
         }
